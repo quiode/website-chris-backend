@@ -7,6 +7,6 @@ export class AppController {
 
   @Get()
   getHello(): string {
-    return this.appService.getHello();
+    return 'Documentation available under https://github.com/quiode/website-chris-backend#api-documentation';
   }
 }
