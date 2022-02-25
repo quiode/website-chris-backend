@@ -6,6 +6,8 @@ import { UsersModule } from './users/users.module';
 import { VideosModule } from './videos/videos.module';
 import { MusicModule } from './music/music.module';
 import { StillsModule } from './stills/stills.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -14,8 +16,18 @@ import { StillsModule } from './stills/stills.module';
     VideosModule,
     MusicModule,
     StillsModule,
+    ThrottlerModule.forRoot({
+      ttl: 5,
+      limit: 10,
+    }),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
