@@ -17,7 +17,7 @@ It will be valid for 15 minutes.
 
 #### POST
 
-- `https://domain:3000/auth/login` _returns the token, it requires the following body:_
+`https://domain:3000/auth/login` _returns the token, it requires the following body:_
 
 ```json
 {
@@ -34,20 +34,14 @@ Response:
 }
 ```
 
+### Stills
+
 #### GET
 
-- `https://domain:3000/auth/login` _refreshes the token, it requires the following body (the previous, still valid access_token):_
+`https://domain:3000/stills/uuid` _returns the still as stream, metadata is encoded in headers_
 
-```json
-{
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImRvbWluaWsiLCJzdWIiOjEsImlhdCI6MTY0NTkwNjc5NywiZXhwIjoxNjQ1OTA3Njk3fQ.ayFmmlOSEY6pTxcLATgSO7wf7pWvkpM5lNrYk4WhFdY"
-}
-```
+`https://domain:3000/stills/uuid/thumbnail` _returns the thumbnail of the still as stream, metadata is encoded in headers_
 
-Reponse:
+#### POST
 
-```json
-{
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImRvbWluaWsxIiwic3ViIjozLCJpYXQiOjE2NDU5MDc2NjYsImV4cCI6MTY0NTkwODU2Nn0.4ns9NuLIqG7L0FKnrM7S8NZBahZCoRkHFlo7OcFu-u0"
-}
-```
+#### DELETE

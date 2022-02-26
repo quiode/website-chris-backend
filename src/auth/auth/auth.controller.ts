@@ -13,6 +13,7 @@ import { Repository } from 'typeorm';
 import { LocalAuthGuard } from '../local-auth.guard';
 import { AuthService } from './auth.service';
 import * as bcrypt from 'bcrypt';
+import { JwtAuthGuard } from '../jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
