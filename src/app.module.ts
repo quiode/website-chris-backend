@@ -8,10 +8,17 @@ import { MusicModule } from './music/music.module';
 import { StillsModule } from './stills/stills.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { AuthModule } from './auth/auth.module';
+import { Connection, getConnectionOptions } from 'typeorm';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot(),
+    TypeOrmModule.forRootAsync({
+      useFactory: async () =>
+        Object.assign(await getConnectionOptions(), {
+          autoLoadEntities: true,
+        }),
+    }),
     UsersModule,
     VideosModule,
     MusicModule,
@@ -20,6 +27,7 @@ import { APP_GUARD } from '@nestjs/core';
       ttl: 5,
       limit: 10,
     }),
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [
@@ -30,4 +38,6 @@ import { APP_GUARD } from '@nestjs/core';
     },
   ],
 })
-export class AppModule {}
+export class AppModule {
+  constructor(private connection: Connection) {}
+}
