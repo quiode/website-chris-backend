@@ -8,7 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { createReadStream, ReadStream } from 'fs';
 import { join } from 'path/posix';
-import { MoreThanOrEqual, Repository } from 'typeorm';
+import { Between, LessThan, MoreThanOrEqual, Repository } from 'typeorm';
 import { Stills } from '../stills.entity';
 import { Constants } from '../../constants';
 import * as fs from 'fs';
@@ -135,7 +135,21 @@ export class StillsService {
     return sharp(path).jpeg({ quality: 40 }).resize(100).toFile(output);
   }
 
-  async getAll() {
+  getAll() {
     return this.stillsRepository.find();
+  }
+
+  getAmount(amount: number) {
+    return this.stillsRepository.find({ where: { position: LessThan(amount) } });
+  }
+
+  amount() {
+    return this.stillsRepository.count();
+  }
+
+  getRange(start: number, end: number) {
+    return this.stillsRepository.find({
+      where: { position: Between(start, end) },
+    });
   }
 }

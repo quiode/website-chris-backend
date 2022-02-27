@@ -18,6 +18,7 @@ import { ExistingStillGuard } from '../not-found-still.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { count } from 'console';
 
 @Controller('stills')
 export class StillsController {
@@ -26,6 +27,21 @@ export class StillsController {
   @Get()
   async getAll() {
     return this.stillsService.getAll();
+  }
+
+  @Get('amount')
+  amount() {
+    return this.stillsService.amount();
+  }
+
+  @Get('amount/:amount')
+  getAmount(@Param('amount') amount: number) {
+    return this.stillsService.getAmount(amount);
+  }
+
+  @Get('amount/:from/:to')
+  async getRange(@Param('from') from: number, @Param('to') to: number) {
+    return this.stillsService.getRange(from, to);
   }
 
   @UseGuards(ExistingStillGuard)

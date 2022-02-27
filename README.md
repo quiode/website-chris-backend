@@ -71,6 +71,12 @@ Example Response:
 ]
 ```
 
+`https://domain:3000/stills/amount/` _returns the amount of stills_
+
+`https://domain:3000/stills/amount/amount` _returns `amount` stills, starting at position 0 up to `amount-1`_
+
+`https://domain:3000/stills/amount/from/to` _returns `amount` stills, starting at position `from` up to `to`_
+
 #### POST
 
 `https://domain:3000/stills` _uploads a still, the body contains the file, form field label is `file`, optional can add another field with name `position` where the position has to be smaller or equal to the current amount of stills_
