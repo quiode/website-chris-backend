@@ -15,6 +15,7 @@ import { Constants } from '../../constants';
 import * as fs from 'fs';
 import * as crypto from 'crypto';
 import * as sharp from 'sharp';
+import { MediaService } from 'src/media/media.service';
 
 export interface updateBody {
   uuid: string;
@@ -23,14 +24,13 @@ export interface updateBody {
 
 @Injectable()
 export class StillsService {
-  constructor(@InjectRepository(Stills) private stillsRepository: Repository<Stills>) {}
+  constructor(
+    @InjectRepository(Stills) private stillsRepository: Repository<Stills>,
+    private mediaService: MediaService
+  ) {}
 
   async checkIfUUIDExists(uuid: string) {
-    const result = await this.stillsRepository.findOne({ where: { id: uuid } });
-    if (!result) {
-      throw new NotFoundException('UUID not found');
-    }
-    return true;
+    return this.mediaService.checkIfUUIDExists(uuid, this.stillsRepository);
   }
 
   getOriginal(uuid: string): ReadStream {
@@ -51,29 +51,11 @@ export class StillsService {
    * @returns the stored data of the given uuid
    */
   getMetadata(uuid: string): Promise<Stills> {
-    return this.stillsRepository.findOne({ where: { id: uuid } });
+    return this.mediaService.getMetadata(uuid, this.stillsRepository);
   }
 
   async checkIfFileExists(file: Express.Multer.File): Promise<boolean> {
-    const promise: Promise<string> = new Promise((resolve, reject) => {
-      const hash = crypto.createHash('sha256');
-      const stream = fs.createReadStream(file.path);
-      stream.on('error', (err) => reject(err));
-      stream.on('data', (chunk) => hash.update(chunk));
-      stream.on('end', () => resolve(hash.digest('hex')));
-    });
-
-    const hash = await promise;
-
-    const identicalFiles = this.stillsRepository.find({
-      where: { hash: hash },
-    });
-
-    if ((await identicalFiles).length > 0) {
-      return true;
-    }
-
-    return false;
+    return this.mediaService.checkIfFileExists(file, this.stillsRepository);
   }
 
   /**
@@ -82,13 +64,7 @@ export class StillsService {
    * @param position position of the file
    */
   async save(file: Express.Multer.File, position = -1) {
-    const promise: Promise<string> = new Promise((resolve, reject) => {
-      const hash = crypto.createHash('sha256');
-      const stream = fs.createReadStream(file.path);
-      stream.on('error', (err) => reject(err));
-      stream.on('data', (chunk) => hash.update(chunk));
-      stream.on('end', () => resolve(hash.digest('hex')));
-    });
+    const promise: Promise<string> = this.mediaService.hashFile(file);
 
     // create metadata
     const hash = await promise;
@@ -130,37 +106,27 @@ export class StillsService {
    * @param position position where the file should be inserted
    */
   async insertPosition(position: number) {
-    const stills = this.stillsRepository.find({
-      where: { position: MoreThanOrEqual(position) },
-    });
-
-    (await stills).forEach(async (still) => {
-      await this.stillsRepository.update({ id: still.id }, { position: still.position + 1 });
-    });
+    this.mediaService.insertPosition(position, this.stillsRepository);
   }
 
   compressImage(path: string, output: string) {
-    return sharp(path).jpeg({ quality: 40 }).resize(100).toFile(output);
+    return this.mediaService.compressImage(path, output);
   }
 
-  getAll() {
-    return this.stillsRepository.find({ order: { position: 'ASC' } });
+  getAll(): Promise<Stills[]> {
+    return this.mediaService.getAll(this.stillsRepository);
   }
 
-  getAmount(amount: number) {
-    return this.stillsRepository.find({
-      where: { position: LessThan(amount) },
-    });
+  getAmount(amount: number): Promise<Stills[]> {
+    return this.mediaService.getAmount(amount, this.stillsRepository);
   }
 
-  amount() {
-    return this.stillsRepository.count();
+  amount(): Promise<number> {
+    return this.mediaService.amount(this.stillsRepository);
   }
 
-  getRange(start: number, end: number) {
-    return this.stillsRepository.find({
-      where: { position: Between(start, end) },
-    });
+  getRange(start: number, end: number): Promise<Stills[]> {
+    return this.mediaService.getRange(start, end, this.stillsRepository);
   }
 
   update(content: updateBody) {
@@ -173,19 +139,7 @@ export class StillsService {
    * @param uuid2
    */
   async reorder(uuid1: string, uuid2: string) {
-    const still1 = await this.stillsRepository.findOne({
-      where: { id: uuid1 },
-    });
-    const still2 = await this.stillsRepository.findOne({
-      where: { id: uuid2 },
-    });
-    await this.stillsRepository.update({ id: uuid1 }, { position: -1 });
-    await this.stillsRepository.update({ id: uuid2 }, { position: still1.position });
-    await this.stillsRepository.update({ id: uuid1 }, { position: still2.position });
-    return {
-      still1: await this.stillsRepository.findOne({ where: { id: uuid1 } }),
-      still2: await this.stillsRepository.findOne({ where: { id: uuid2 } }),
-    };
+    return this.mediaService.reorder(uuid1, uuid2, this.stillsRepository);
   }
 
   /**
@@ -226,35 +180,6 @@ export class StillsService {
   }
 
   async insert(uuid: string, position: number) {
-    const previousPosition = (await this.stillsRepository.findOne({ where: { id: uuid } }))
-      .position;
-    if (previousPosition == position) {
-      return;
-    }
-    await this.stillsRepository.update({ id: uuid }, { position: -1 });
-    if (previousPosition < position) {
-      const inBetweenValues = await this.stillsRepository.find({
-        where: { position: Between(previousPosition, position) },
-        order: { position: 'ASC' },
-      });
-      for (let i = 0; i < inBetweenValues.length; i++) {
-        await this.stillsRepository.update(
-          { id: inBetweenValues[i].id },
-          { position: inBetweenValues[i].position - 1 }
-        );
-      }
-    } else {
-      const inBetweenValues = await this.stillsRepository.find({
-        where: { position: Between(position, previousPosition) },
-        order: { position: 'DESC' },
-      });
-      for (let i = 0; i < inBetweenValues.length; i++) {
-        await this.stillsRepository.update(
-          { id: inBetweenValues[i].id },
-          { position: inBetweenValues[i].position + 1 }
-        );
-      }
-    }
-    await this.stillsRepository.update({ id: uuid }, { position: position });
+    this.mediaService.insert(uuid, position, this.stillsRepository);
   }
 }

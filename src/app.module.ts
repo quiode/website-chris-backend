@@ -10,6 +10,8 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
 import { Connection, getConnectionOptions } from 'typeorm';
+import { MediaService } from './media/media.service';
+import { MediaModule } from './media/media.module';
 
 @Module({
   imports: [
@@ -28,6 +30,7 @@ import { Connection, getConnectionOptions } from 'typeorm';
       limit: 10,
     }),
     AuthModule,
+    MediaModule,
   ],
   controllers: [AppController],
   providers: [
@@ -36,6 +39,7 @@ import { Connection, getConnectionOptions } from 'typeorm';
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
     },
+    MediaService,
   ],
 })
 export class AppModule {
