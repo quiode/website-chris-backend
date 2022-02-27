@@ -1,4 +1,10 @@
-import { HttpException, Injectable, NotFoundException, HttpStatus } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  NotFoundException,
+  HttpStatus,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createReadStream, ReadStream } from 'fs';
 import { join } from 'path/posix';
@@ -33,6 +39,11 @@ export class StillsService {
     );
   }
 
+  /**
+   * retrieves the data stored in the database of a still
+   * @param uuid the uuid of the image
+   * @returns the stored data of the given uuid
+   */
   getMetadata(uuid: string): Promise<Stills> {
     return this.stillsRepository.findOne({ where: { id: uuid } });
   }
@@ -79,6 +90,9 @@ export class StillsService {
     if (position < 0) {
       position = await this.stillsRepository.count();
     } else {
+      if (position > (await this.stillsRepository.count())) {
+        throw new BadRequestException('Position is out of bounds');
+      }
       const insertProccess = this.insertPosition(position);
     }
     // save file to final destination
@@ -118,6 +132,10 @@ export class StillsService {
   }
 
   compressImage(path: string, output: string) {
-    return sharp(path).jpeg({ quality: 20 }).resize(100).toFile(output);
+    return sharp(path).jpeg({ quality: 40 }).resize(100).toFile(output);
+  }
+
+  async getAll() {
+    return this.stillsRepository.find();
   }
 }

@@ -42,6 +42,37 @@ Response:
 
 `https://domain:3000/stills/uuid/thumbnail` _returns the thumbnail of the still as stream, metadata is encoded in headers_
 
+`https://domain:3000/stills/` _returns a list of all stills_
+
+Example Response:
+
+```json
+[
+  {
+    "id": "83f51b91-b66e-49f0-8773-b06b6f613d15",
+    "hash": "7d3ee0c0bc4fe041b63360ca2bfef583f28f460d2e8ca6f01f357baa2c7d1bcb",
+    "position": 0
+  },
+  {
+    "id": "84522e61-4294-401c-afda-d27f04512d09",
+    "hash": "eac318afddd47fc4d8cf6de3579d4cfe28316173dbac3c6906d652fe991d9b38",
+    "position": 1
+  },
+  {
+    "id": "1d11878c-b31b-4332-aeff-ff2bd43bf269",
+    "hash": "f7f471ccf608f5868002cb8fb14d557fb03e62ba247c10d177ac68214a4869d9",
+    "position": 2
+  },
+  {
+    "id": "768c3805-163b-4c96-b18d-a56d92eb5151",
+    "hash": "5d3d47eb829a7394e5c1e44597397b083e18e7ee14f4dfba289168f5cdb09179",
+    "position": 3
+  }
+]
+```
+
 #### POST
+
+`https://domain:3000/stills` _uploads a still, the body contains the file, form field label is `file`, optional can add another field with name `position` where the position has to be smaller or equal to the current amount of stills_
 
 #### DELETE

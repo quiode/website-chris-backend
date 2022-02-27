@@ -23,6 +23,11 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 export class StillsController {
   constructor(private stillsService: StillsService) {}
 
+  @Get()
+  async getAll() {
+    return this.stillsService.getAll();
+  }
+
   @UseGuards(ExistingStillGuard)
   @Get('/:uuid')
   async getOriginal(@Param('uuid') uuid: string, @Response({ passthrough: true }) res) {
@@ -62,6 +67,9 @@ export class StillsController {
     }
     if (await this.stillsService.checkIfFileExists(file)) {
       throw new ConflictException('File already exists');
+    }
+    if (request.body.position != undefined) {
+      return this.stillsService.save(file, request.body.position);
     }
     return this.stillsService.save(file);
   }
