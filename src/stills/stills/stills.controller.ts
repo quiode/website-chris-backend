@@ -2,12 +2,15 @@ import {
   BadRequestException,
   ConflictException,
   Controller,
+  Delete,
   Get,
   Param,
+  Patch,
   Post,
   Req,
   Response,
   StreamableFile,
+  UnsupportedMediaTypeException,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -19,6 +22,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { count } from 'console';
+import { randomUUID } from 'crypto';
 
 @Controller('stills')
 export class StillsController {
@@ -79,7 +83,7 @@ export class StillsController {
   @UseInterceptors(FileInterceptor('file', { dest: Constants.temp_upload_path }))
   async upload(@UploadedFile() file: Express.Multer.File, @Req() request: Request) {
     if (file.mimetype !== 'image/jpeg') {
-      throw new BadRequestException('Only JPEG files are supported');
+      throw new UnsupportedMediaTypeException('Only JPEG files are supported');
     }
     if (await this.stillsService.checkIfFileExists(file)) {
       throw new ConflictException('File already exists');
@@ -88,5 +92,40 @@ export class StillsController {
       return this.stillsService.save(file, request.body.position);
     }
     return this.stillsService.save(file);
+  }
+
+  // @Patch('/:uuid')
+  // @UseGuards(JwtAuthGuard, ExistingStillGuard)
+  // update(@Param('uuid') uuid: string, @Req() req: Request) {
+  //   if (req.body.position != undefined) {
+  //     return this.stillsService.update({ uuid, position: req.body.position });
+  //   } else {
+  //     throw new BadRequestException('Position is required');
+  //   }
+  // }
+
+  @Patch('/:uuid/:uuid2')
+  @UseGuards(JwtAuthGuard, ExistingStillGuard)
+  reorder(@Param('uuid') uuid: string, @Param('uuid2') uuid2: string) {
+    return this.stillsService.reorder(uuid, uuid2);
+  }
+
+  @Patch('/:uuid')
+  @UseGuards(JwtAuthGuard, ExistingStillGuard)
+  async insert(@Param('uuid') uuid: string, @Req() req: Request) {
+    if (req.body.position != undefined) {
+      await this.stillsService.insert(uuid, req.body.position);
+    } else {
+      throw new BadRequestException('Position is required');
+    }
+
+    return 'OK';
+  }
+
+  @Delete('/:uuid')
+  @UseGuards(JwtAuthGuard, ExistingStillGuard)
+  async delete(@Param('uuid') uuid: string) {
+    await this.stillsService.delete(uuid);
+    return 'OK';
   }
 }

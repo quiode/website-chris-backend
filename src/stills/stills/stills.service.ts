@@ -4,6 +4,7 @@ import {
   NotFoundException,
   HttpStatus,
   BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createReadStream, ReadStream } from 'fs';
@@ -14,6 +15,11 @@ import { Constants } from '../../constants';
 import * as fs from 'fs';
 import * as crypto from 'crypto';
 import * as sharp from 'sharp';
+
+export interface updateBody {
+  uuid: string;
+  position: number;
+}
 
 @Injectable()
 export class StillsService {
@@ -102,7 +108,9 @@ export class StillsService {
     fs.rmSync(join(process.cwd(), file.destination), { recursive: true });
     fs.mkdirSync(join(process.cwd(), file.destination), { recursive: true });
     // make thumbnail
-    fs.mkdirSync(join(process.cwd(), Constants.stills_thumbnails_path), { recursive: true });
+    fs.mkdirSync(join(process.cwd(), Constants.stills_thumbnails_path), {
+      recursive: true,
+    });
     const thumbnailPath = join(
       process.cwd(),
       Constants.stills_thumbnails_path,
@@ -136,11 +144,13 @@ export class StillsService {
   }
 
   getAll() {
-    return this.stillsRepository.find();
+    return this.stillsRepository.find({ order: { position: 'ASC' } });
   }
 
   getAmount(amount: number) {
-    return this.stillsRepository.find({ where: { position: LessThan(amount) } });
+    return this.stillsRepository.find({
+      where: { position: LessThan(amount) },
+    });
   }
 
   amount() {
@@ -151,5 +161,100 @@ export class StillsService {
     return this.stillsRepository.find({
       where: { position: Between(start, end) },
     });
+  }
+
+  update(content: updateBody) {
+    return this.stillsRepository.update({ id: content.uuid }, { position: content.position });
+  }
+
+  /**
+   * changes position of one still with another
+   * @param uuid1
+   * @param uuid2
+   */
+  async reorder(uuid1: string, uuid2: string) {
+    const still1 = await this.stillsRepository.findOne({
+      where: { id: uuid1 },
+    });
+    const still2 = await this.stillsRepository.findOne({
+      where: { id: uuid2 },
+    });
+    await this.stillsRepository.update({ id: uuid1 }, { position: -1 });
+    await this.stillsRepository.update({ id: uuid2 }, { position: still1.position });
+    await this.stillsRepository.update({ id: uuid1 }, { position: still2.position });
+    return {
+      still1: await this.stillsRepository.findOne({ where: { id: uuid1 } }),
+      still2: await this.stillsRepository.findOne({ where: { id: uuid2 } }),
+    };
+  }
+
+  /**
+   * deletes the still and moves all files with a position greater than the given position to the left (so that position is consistent)
+   * @param uuid uuid of the still to be deleted
+   */
+  delete(uuid: string) {
+    // delete still in database
+    this.stillsRepository.findOne({ where: { id: uuid } }).then((still) => {
+      const position = still.position;
+      this.stillsRepository.delete({ id: uuid }).then(async () => {
+        const stills = this.stillsRepository.find({
+          where: {
+            position: MoreThanOrEqual(position),
+          },
+        });
+        stills.then((stills) => {
+          stills.forEach(async (still) => {
+            this.stillsRepository.update({ id: still.id }, { position: still.position - 1 });
+          });
+        });
+      });
+    });
+    // delete still in file system
+    fs.rm(join(process.cwd(), Constants.stills_path, uuid + Constants.image_extension), (err) => {
+      if (err) {
+        throw new InternalServerErrorException(err);
+      }
+    });
+    fs.rm(
+      join(process.cwd(), Constants.stills_thumbnails_path, uuid + Constants.image_extension),
+      (err) => {
+        if (err) {
+          throw new InternalServerErrorException(err);
+        }
+      }
+    );
+  }
+
+  async insert(uuid: string, position: number) {
+    const previousPosition = (await this.stillsRepository.findOne({ where: { id: uuid } }))
+      .position;
+    if (previousPosition == position) {
+      return;
+    }
+    await this.stillsRepository.update({ id: uuid }, { position: -1 });
+    if (previousPosition < position) {
+      const inBetweenValues = await this.stillsRepository.find({
+        where: { position: Between(previousPosition, position) },
+        order: { position: 'ASC' },
+      });
+      for (let i = 0; i < inBetweenValues.length; i++) {
+        await this.stillsRepository.update(
+          { id: inBetweenValues[i].id },
+          { position: inBetweenValues[i].position - 1 }
+        );
+      }
+    } else {
+      const inBetweenValues = await this.stillsRepository.find({
+        where: { position: Between(position, previousPosition) },
+        order: { position: 'DESC' },
+      });
+      for (let i = 0; i < inBetweenValues.length; i++) {
+        await this.stillsRepository.update(
+          { id: inBetweenValues[i].id },
+          { position: inBetweenValues[i].position + 1 }
+        );
+      }
+    }
+    await this.stillsRepository.update({ id: uuid }, { position: position });
   }
 }
