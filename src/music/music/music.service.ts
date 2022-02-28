@@ -14,4 +14,8 @@ export class MusicService {
   checkIfUUIDExists(uuid: string) {
     return this.mediaService.checkIfUUIDExists(uuid, this.stillsRepository);
   }
+
+  getAll() {
+    return this.mediaService.getAll(this.stillsRepository);
+  }
 }
