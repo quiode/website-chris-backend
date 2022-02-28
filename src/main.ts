@@ -23,6 +23,7 @@ async function bootstrap() {
   //   })
   // );
   // app.use(csurf());
+  app.setGlobalPrefix('api');
   await app.listen(3000);
 }
 bootstrap();

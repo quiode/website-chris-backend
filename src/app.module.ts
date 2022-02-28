@@ -12,6 +12,8 @@ import { AuthModule } from './auth/auth.module';
 import { Connection, getConnectionOptions } from 'typeorm';
 import { MediaService } from './media/media.service';
 import { MediaModule } from './media/media.module';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -31,6 +33,10 @@ import { MediaModule } from './media/media.module';
     }),
     AuthModule,
     MediaModule,
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'website'),
+      exclude: ['/api*'],
+    }),
   ],
   controllers: [AppController],
   providers: [
