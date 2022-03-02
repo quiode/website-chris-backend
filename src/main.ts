@@ -24,7 +24,7 @@ async function bootstrap() {
   // );
   // app.use(csurf());
   app.enableCors({
-    origin: ['http://localhost:4200', 'https://christoph-baertsch.ch'],
+    origin: ['http://localhost:4200', 'http://localhost:41743', 'https://christoph-baertsch.ch'],
   });
   app.setGlobalPrefix('api');
   await app.listen(3000);

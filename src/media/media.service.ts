@@ -57,7 +57,7 @@ export class MediaService {
   }
 
   compressImage(path: string, output: string) {
-    return sharp(path).jpeg({ quality: 40 }).resize(100).toFile(output);
+    return sharp(path).jpeg({ quality: 60 }).toFile(output);
   }
 
   getAll(repository: Repository<Stills | Videos | Music>) {
