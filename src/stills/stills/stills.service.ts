@@ -16,6 +16,7 @@ import * as fs from 'fs';
 import * as crypto from 'crypto';
 import * as sharp from 'sharp';
 import { MediaService } from 'src/media/media.service';
+import Jimp from 'jimp';
 
 export interface updateBody {
   uuid: string;
@@ -65,6 +66,7 @@ export class StillsService {
    */
   async save(file: Express.Multer.File, position = -1) {
     const promise: Promise<string> = this.mediaService.hashFile(file);
+    const watermark = '@Christoph Anton-Cornelius Bärtsch';
 
     // create metadata
     const hash = await promise;
@@ -92,7 +94,18 @@ export class StillsService {
       Constants.stills_thumbnails_path,
       uuid + Constants.image_extension
     );
-    this.compressImage(filePath, thumbnailPath);
+    this.compressImage(filePath, thumbnailPath).then(() => {
+      Jimp.read(thumbnailPath)
+        .then((image) => {
+          const loadedImage = image;
+          Jimp.loadFont(Jimp.FONT_SANS_16_WHITE).then((font) => {
+            loadedImage.print(font, 10, 10, watermark).write(thumbnailPath);
+          });
+        })
+        .catch((err) => {
+          throw new InternalServerErrorException(err);
+        });
+    });
     // save metadata
     const still = new Stills();
     still.id = uuid;
