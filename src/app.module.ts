@@ -29,7 +29,7 @@ import { join } from 'path';
     StillsModule,
     ThrottlerModule.forRoot({
       ttl: 5,
-      limit: 10,
+      limit: 100,
     }),
     AuthModule,
     MediaModule,

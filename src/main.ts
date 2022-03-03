@@ -25,6 +25,7 @@ async function bootstrap() {
   // app.use(csurf());
   app.enableCors({
     origin: ['http://localhost:4200', 'http://localhost:41743', 'https://christoph-baertsch.ch'],
+    exposedHeaders: ['uuid', 'position', 'hash'],
   });
   app.setGlobalPrefix('api');
   await app.listen(3000);
