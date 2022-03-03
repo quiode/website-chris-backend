@@ -16,7 +16,8 @@ import * as fs from 'fs';
 import * as crypto from 'crypto';
 import * as sharp from 'sharp';
 import { MediaService } from 'src/media/media.service';
-import Jimp from 'jimp';
+import Jimp = require('jimp');
+import { Font } from '@jimp/plugin-print';
 
 export interface updateBody {
   uuid: string;
@@ -29,6 +30,9 @@ export class StillsService {
     @InjectRepository(Stills) private stillsRepository: Repository<Stills>,
     private mediaService: MediaService
   ) {}
+
+  private fontBig: Font;
+  private fontSmall: Font;
 
   async checkIfUUIDExists(uuid: string) {
     return this.mediaService.checkIfUUIDExists(uuid, this.stillsRepository);
@@ -77,12 +81,30 @@ export class StillsService {
       if (position > (await this.stillsRepository.count())) {
         throw new BadRequestException('Position is out of bounds');
       }
-      const insertProccess = this.insertPosition(position);
+      this.insertPosition(position);
     }
     // save file to final destination
     const filePath = join(process.cwd(), Constants.stills_path, uuid + Constants.image_extension);
     fs.mkdirSync(Constants.stills_path, { recursive: true });
     fs.copyFileSync(join(process.cwd(), file.path), filePath);
+
+    // add watermark
+    if (!this.fontBig) {
+      this.fontBig = await Jimp.loadFont(Jimp.FONT_SANS_64_WHITE);
+    }
+    if (!this.fontSmall) {
+      this.fontSmall = await Jimp.loadFont(Jimp.FONT_SANS_16_WHITE);
+    }
+
+    const loadedImage = await Jimp.read(filePath);
+    let font: Font;
+    if (loadedImage.bitmap.width > 2000) {
+      font = this.fontBig;
+    } else {
+      font = this.fontSmall;
+    }
+    await loadedImage.print(font, 10, 10, watermark).write(filePath);
+
     fs.rmSync(join(process.cwd(), file.destination), { recursive: true });
     fs.mkdirSync(join(process.cwd(), file.destination), { recursive: true });
     // make thumbnail
@@ -94,18 +116,7 @@ export class StillsService {
       Constants.stills_thumbnails_path,
       uuid + Constants.image_extension
     );
-    this.compressImage(filePath, thumbnailPath).then(() => {
-      Jimp.read(thumbnailPath)
-        .then((image) => {
-          const loadedImage = image;
-          Jimp.loadFont(Jimp.FONT_SANS_16_WHITE).then((font) => {
-            loadedImage.print(font, 10, 10, watermark).write(thumbnailPath);
-          });
-        })
-        .catch((err) => {
-          throw new InternalServerErrorException(err);
-        });
-    });
+    this.compressImage(filePath, thumbnailPath);
     // save metadata
     const still = new Stills();
     still.id = uuid;
