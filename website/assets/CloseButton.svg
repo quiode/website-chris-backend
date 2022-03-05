@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="164.85178mm"
+   height="164.85178mm"
+   viewBox="0 0 164.85178 164.85178"
+   version="1.1"
+   id="svg5"
+   sodipodi:docname="CloseButton.svg"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview8"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:pageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="1.3465758"
+     inkscape:cx="311.1596"
+     inkscape:cy="311.53092"
+     inkscape:window-width="1920"
+     inkscape:window-height="1048"
+     inkscape:window-x="0"
+     inkscape:window-y="32"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="g1063" />
+  <defs
+     id="defs2" />
+  <g
+     id="layer1"
+     transform="translate(-24.235468,-70.129601)">
+    <g
+       id="g1063"
+       transform="rotate(45,106.66135,152.55549)">
+      <path
+         style="fill:none;fill-opacity:1;stroke:#ffffff;stroke-width:26.4583;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.99810737"
+         d="M 106.66135,49.21683 V 255.89414"
+         id="path881" />
+      <path
+         style="fill:none;fill-opacity:1;stroke:#fffffe;stroke-width:26.4583;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="M 210,152.55549 H 3.3227"
+         id="path881-3" />
+    </g>
+  </g>
+</svg>
