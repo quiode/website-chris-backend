@@ -80,7 +80,7 @@ Example Response:
 
 #### POST
 
-`https://domain:3000/stills` _uploads a still, the body contains the file, form field label is `file`, optional can add another field with name `position` where the position has to be smaller or equal to the current amount of stills, returns the still saved in the database_
+`https://domain:3000/stills` _uploads a still, the body contains the file, form field label is `file`_
 
 #### DELETE
 
@@ -88,5 +88,8 @@ Example Response:
 
 #### PATCH
 
-`https://domain:3000/stills/uuid` _inserts still into new position (position has to be a json body)_
-`https://domain:3000/stills/uuid1/uuid2` _replaces two positions with each other_
+<!-- `https://domain:3000/stills/uuid` _inserts still into new position (position has to be a json body)_
+`https://domain:3000/stills/uuid1/uuid2` _replaces two positions with each other_ -->
+<!-- TODO: this -->
+
+`https://doimain:3000/stills/replace`

@@ -39,6 +39,9 @@ lerna-debug.log*
 
 # Local Assets
 /assets/stills/
+/assets/temp/
+/assets/videos/
+/assets/music/
 
 # Website
 /website/*

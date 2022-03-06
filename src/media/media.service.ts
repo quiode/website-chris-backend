@@ -57,7 +57,17 @@ export class MediaService {
   }
 
   compressImage(path: string, output: string) {
-    return sharp(path).jpeg({ quality: 40 }).resize(1080).toFile(output);
+    return sharp(path, { failOnError: false })
+      .jpeg({ quality: 40 })
+      .resize(1080)
+      .toFile(output)
+      .catch(() => {
+        return sharp(path, { failOnError: false })
+          .png({ quality: 40 })
+          .resize(1080)
+          .toFormat('jpg')
+          .toFile(output);
+      });
   }
 
   getAll(repository: Repository<Stills | Videos | Music>) {

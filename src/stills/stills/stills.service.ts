@@ -1,20 +1,17 @@
 import {
-  HttpException,
-  Injectable,
-  NotFoundException,
-  HttpStatus,
   BadRequestException,
+  Injectable,
   InternalServerErrorException,
+  OnModuleInit,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createReadStream, ReadStream } from 'fs';
 import { join } from 'path/posix';
-import { Between, LessThan, MoreThanOrEqual, Repository } from 'typeorm';
+import { MoreThanOrEqual, Repository, Connection } from 'typeorm';
 import { Stills } from '../stills.entity';
 import { Constants } from '../../constants';
 import * as fs from 'fs';
 import * as crypto from 'crypto';
-import * as sharp from 'sharp';
 import { MediaService } from 'src/media/media.service';
 import Jimp = require('jimp');
 import { Font } from '@jimp/plugin-print';
@@ -25,11 +22,18 @@ export interface updateBody {
 }
 
 @Injectable()
-export class StillsService {
+export class StillsService implements OnModuleInit {
   constructor(
     @InjectRepository(Stills) private stillsRepository: Repository<Stills>,
-    private mediaService: MediaService
+    private mediaService: MediaService,
+    private connection: Connection
   ) {}
+
+  onModuleInit() {
+    // clean temp folder on init
+    fs.rmSync(join(process.cwd(), Constants.temp_upload_path), { recursive: true });
+    fs.mkdirSync(join(process.cwd(), Constants.temp_upload_path), { recursive: true });
+  }
 
   private fontBig: Font;
   private fontSmall: Font;
@@ -66,23 +70,14 @@ export class StillsService {
   /**
    * saves an image in orignal and compressed format and makes an entry in the database
    * @param file file to be saved
-   * @param position position of the file
    */
-  async save(file: Express.Multer.File, position = -1) {
+  async save(file: Express.Multer.File) {
     const promise: Promise<string> = this.mediaService.hashFile(file);
     const watermark = '@Christoph Anton-Cornelius Bärtsch';
 
     // create metadata
     const hash = await promise;
     const uuid = crypto.randomUUID();
-    if (position < 0) {
-      position = await this.stillsRepository.count();
-    } else {
-      if (position > (await this.stillsRepository.count())) {
-        throw new BadRequestException('Position is out of bounds');
-      }
-      this.insertPosition(position);
-    }
     // save file to final destination
     const filePath = join(process.cwd(), Constants.stills_path, uuid + Constants.image_extension);
     fs.mkdirSync(Constants.stills_path, { recursive: true });
@@ -105,8 +100,7 @@ export class StillsService {
     }
     await loadedImage.print(font, 10, 10, watermark).write(filePath);
 
-    fs.rmSync(join(process.cwd(), file.destination), { recursive: true });
-    fs.mkdirSync(join(process.cwd(), file.destination), { recursive: true });
+    fs.rmSync(join(process.cwd(), file.path), { recursive: true });
     // make thumbnail
     fs.mkdirSync(join(process.cwd(), Constants.stills_thumbnails_path), {
       recursive: true,
@@ -121,8 +115,23 @@ export class StillsService {
     const still = new Stills();
     still.id = uuid;
     still.hash = hash;
-    still.position = position;
-    return this.stillsRepository.save(still);
+    let operationFailed = true;
+    let counter = 0;
+    while (operationFailed) {
+      if (counter > 10) {
+        throw new InternalServerErrorException('Database operation failed');
+      }
+      still.position = await this.stillsRepository.count();
+      counter++;
+      await this.stillsRepository
+        .save(still)
+        .catch(() => {
+          operationFailed = true;
+        })
+        .then(() => {
+          operationFailed = false;
+        });
+    }
   }
 
   /**
@@ -205,5 +214,46 @@ export class StillsService {
 
   async insert(uuid: string, position: number) {
     this.mediaService.insert(uuid, position, this.stillsRepository);
+  }
+
+  async replace(body: { id: string; position: number }[]) {
+    const queryRunner = this.connection.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      let iserror = false;
+      for (let index = 0; index < body.length; index++) {
+        const element = body[index];
+        iserror =
+          (await this.stillsRepository.findOne({
+            where: { id: element.id },
+          })) === undefined;
+      }
+      if (iserror) {
+        throw new InternalServerErrorException('Database operation failed');
+      } else {
+        for (let index = 0; index < body.length; index++) {
+          const element = body[index];
+          const still = await this.stillsRepository.findOne({
+            where: { id: element.id },
+          });
+          const position = still.position;
+          await this.stillsRepository.update({ id: element.id }, { position: (position + 1) * -1 });
+        }
+        for (let index = 0; index < body.length; index++) {
+          const element = body[index];
+          await this.stillsRepository.update({ id: element.id }, { position: element.position });
+        }
+      }
+      await queryRunner.commitTransaction();
+      return true;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      return false;
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

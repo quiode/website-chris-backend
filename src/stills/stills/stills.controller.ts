@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Body,
   ConflictException,
   Controller,
   Delete,
@@ -23,6 +24,7 @@ import { Request } from 'express';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { count } from 'console';
 import { randomUUID } from 'crypto';
+import { InternalServerErrorException } from '@nestjs/common';
 
 @Controller('stills')
 export class StillsController {
@@ -88,10 +90,20 @@ export class StillsController {
     if (await this.stillsService.checkIfFileExists(file)) {
       throw new ConflictException('File already exists');
     }
-    if (request.body.position != undefined) {
-      return this.stillsService.save(file, request.body.position);
-    }
     return this.stillsService.save(file);
+  }
+
+  /**
+   * fully replaces all positions with the given positions
+   */
+  @Patch('replace')
+  @UseGuards(JwtAuthGuard)
+  async replace(@Body() body: { id: string; position: number }[]) {
+    if (await this.stillsService.replace(body)) {
+      return this.stillsService.getAll();
+    } else {
+      throw new InternalServerErrorException('Could not replace positions');
+    }
   }
 
   // @Patch('/:uuid')
@@ -104,23 +116,23 @@ export class StillsController {
   //   }
   // }
 
-  @Patch('/:uuid/:uuid2')
-  @UseGuards(JwtAuthGuard, ExistingStillGuard)
-  reorder(@Param('uuid') uuid: string, @Param('uuid2') uuid2: string) {
-    return this.stillsService.reorder(uuid, uuid2);
-  }
+  // @Patch('/reoder/:uuid/:uuid2')
+  // @UseGuards(JwtAuthGuard, ExistingStillGuard)
+  // reorder(@Param('uuid') uuid: string, @Param('uuid2') uuid2: string) {
+  //   return this.stillsService.reorder(uuid, uuid2);
+  // }
 
-  @Patch('/:uuid')
-  @UseGuards(JwtAuthGuard, ExistingStillGuard)
-  async insert(@Param('uuid') uuid: string, @Req() req: Request) {
-    if (req.body.position != undefined) {
-      await this.stillsService.insert(uuid, req.body.position);
-    } else {
-      throw new BadRequestException('Position is required');
-    }
+  // @Patch('/insert/:uuid')
+  // @UseGuards(JwtAuthGuard, ExistingStillGuard)
+  // async insert(@Param('uuid') uuid: string, @Req() req: Request) {
+  //   if (req.body.position != undefined) {
+  //     await this.stillsService.insert(uuid, req.body.position);
+  //   } else {
+  //     throw new BadRequestException('Position is required');
+  //   }
 
-    return 'OK';
-  }
+  //   return 'OK';
+  // }
 
   @Delete('/:uuid')
   @UseGuards(JwtAuthGuard, ExistingStillGuard)
