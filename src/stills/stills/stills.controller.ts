@@ -125,7 +125,7 @@ export class StillsController {
   @Delete('/:uuid')
   @UseGuards(JwtAuthGuard, ExistingStillGuard)
   async delete(@Param('uuid') uuid: string) {
-    await this.stillsService.delete(uuid);
+    this.stillsService.delete(uuid);
     return 'OK';
   }
 }
