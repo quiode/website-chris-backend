@@ -241,6 +241,7 @@ export class MediaService {
         fileName + '_watermark.png',
         await fetchFile('https://localhost:3000/public/VideoWaterMark.png')
       );
+      process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '1'; // TODO: disable in production
       await ffmpeg.run(
         '-i',
         baseName + Constants.video_extension,
@@ -259,11 +260,13 @@ export class MediaService {
         baseName + Constants.video_extension
       );
       ffmpeg.FS('unlink', baseName + '_resized' + Constants.video_extension);
+      ffmpeg.FS('unlink', fileName + '_watermark.png');
       fs.mkdirSync(Constants.videos_path, { recursive: true });
       fs.writeFileSync(
         Constants.videos_path + '/' + baseName + Constants.video_extension,
         ffmpeg.FS('readFile', baseName + Constants.video_extension)
       );
+      ffmpeg.FS('unlink', baseName + Constants.video_extension);
       ffmpeg.exit();
       fs.rmSync(path);
       return true;
