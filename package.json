@@ -21,8 +21,6 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@ffmpeg/core": "^0.10.0",
-    "@ffmpeg/ffmpeg": "^0.10.1",
     "@jimp/bmp": "^0.16.1",
     "@jimp/gif": "^0.16.1",
     "@jimp/jpeg": "^0.16.1",
@@ -36,6 +34,7 @@
     "@nestjs/serve-static": "^2.2.2",
     "@nestjs/throttler": "^2.0.0",
     "@nestjs/typeorm": "^8.0.3",
+    "@types/fluent-ffmpeg": "^2.1.20",
     "@types/jimp": "^0.2.28",
     "@types/sharp": "^0.29.5",
     "@types/uuid": "^8.3.4",
@@ -44,6 +43,7 @@
     "crypto": "^1.0.1",
     "csurf": "^1.11.0",
     "express-session": "^1.17.2",
+    "fluent-ffmpeg": "^2.1.2",
     "hbs": "^4.2.0",
     "helmet": "^5.0.2",
     "jimp": "^0.16.1",

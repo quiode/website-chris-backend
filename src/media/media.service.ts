@@ -16,7 +16,7 @@ import { Stills } from 'src/stills/stills.entity';
 import { Videos } from 'src/videos/videos.entity';
 import { Music } from 'src/music/music.entity';
 import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
-import { basename, extname } from 'path';
+import { basename } from 'path';
 import { Constants } from '../constants';
 
 @Injectable()
@@ -226,6 +226,7 @@ export class MediaService {
    * @returns watermarks the file, resizes the file, safes it to a constant location and returns true on success
    */
   async waterMarkVideo(path: string) {
+    throw new Error('Method not implemented.');
     try {
       const baseName = basename(path);
       const fileName = basename(path).split('.')[0];
