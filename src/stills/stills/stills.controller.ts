@@ -89,7 +89,18 @@ export class StillsController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('file', { dest: Constants.temp_upload_path }))
+  @UseInterceptors(
+    FileInterceptor('file', {
+      dest: Constants.temp_upload_path,
+      fileFilter: (req, file, cb) => {
+        if (file.mimetype !== 'image/jpeg') {
+          cb(new BadRequestException('Only JPEG files are supported'), false);
+        } else {
+          cb(null, true);
+        }
+      },
+    })
+  )
   async upload(@UploadedFile() file: Express.Multer.File, @Req() request: Request) {
     if (file.mimetype !== 'image/jpeg') {
       throw new UnsupportedMediaTypeException('Only JPEG files are supported');
