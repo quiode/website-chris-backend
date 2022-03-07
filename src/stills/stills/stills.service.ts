@@ -220,51 +220,6 @@ export class StillsService implements OnModuleInit {
   }
 
   async replace(body: { id: string; position: number }[]) {
-    const queryRunner = this.connection.createQueryRunner();
-
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      let iserror = false;
-      for (let index = 0; index < body.length; index++) {
-        const element = body[index];
-        iserror =
-          (await await queryRunner.manager.findOne(Stills, {
-            where: { id: element.id },
-          })) === undefined;
-      }
-      if (iserror) {
-        throw new InternalServerErrorException('Database operation failed');
-      } else {
-        for (let index = 0; index < body.length; index++) {
-          const element = body[index];
-          const still = await queryRunner.manager.findOne(Stills, {
-            where: { id: element.id },
-          });
-          const position = still.position;
-          await queryRunner.manager.update(
-            Stills,
-            { id: element.id },
-            { position: (position + 1) * -1 }
-          );
-        }
-        for (let index = 0; index < body.length; index++) {
-          const element = body[index];
-          await queryRunner.manager.update(
-            Stills,
-            { id: element.id },
-            { position: element.position }
-          );
-        }
-      }
-      await queryRunner.commitTransaction();
-      return true;
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      return false;
-    } finally {
-      await queryRunner.release();
-    }
+    return this.mediaService.replace(body, Stills);
   }
 }

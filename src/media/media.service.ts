@@ -1,5 +1,13 @@
-import { Repository, LessThan, Between, MoreThanOrEqual } from 'typeorm';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Repository,
+  LessThan,
+  Between,
+  MoreThanOrEqual,
+  Entity,
+  Connection,
+  EntityTarget,
+} from 'typeorm';
+import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import * as fs from 'fs';
 import * as crypto from 'crypto';
 import { join } from 'path';
@@ -10,6 +18,8 @@ import { Music } from 'src/music/music.entity';
 
 @Injectable()
 export class MediaService {
+  constructor(private connection: Connection) {}
+
   async checkIfUUIDExists(uuid: string, repository: Repository<Stills | Videos | Music>) {
     const result = await repository.findOne({ where: { id: uuid } });
     if (!result) {
@@ -153,5 +163,57 @@ export class MediaService {
       }
     }
     await repository.update({ id: uuid }, { position: position });
+  }
+
+  async replace(
+    body: { id: string; position: number }[],
+    entity: EntityTarget<Stills | Videos | Music>
+  ): Promise<boolean> {
+    const queryRunner = this.connection.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      let iserror = false;
+      for (let index = 0; index < body.length; index++) {
+        const element = body[index];
+        iserror =
+          (await await queryRunner.manager.findOne(entity, {
+            where: { id: element.id },
+          })) === undefined;
+      }
+      if (iserror) {
+        throw new InternalServerErrorException('Database operation failed');
+      } else {
+        for (let index = 0; index < body.length; index++) {
+          const element = body[index];
+          const still = await queryRunner.manager.findOne(entity, {
+            where: { id: element.id },
+          });
+          const position = still.position;
+          await queryRunner.manager.update(
+            entity,
+            { id: element.id },
+            { position: (position + 1) * -1 }
+          );
+        }
+        for (let index = 0; index < body.length; index++) {
+          const element = body[index];
+          await queryRunner.manager.update(
+            entity,
+            { id: element.id },
+            { position: element.position }
+          );
+        }
+      }
+      await queryRunner.commitTransaction();
+      return true;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      return false;
+    } finally {
+      await queryRunner.release();
+    }
   }
 }
