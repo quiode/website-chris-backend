@@ -6,6 +6,7 @@ import {
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   Patch,
   Post,
   Req,
@@ -24,7 +25,7 @@ import { Request } from 'express';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { count } from 'console';
 import { randomUUID } from 'crypto';
-import { InternalServerErrorException } from '@nestjs/common';
+import { InternalServerErrorException, ParseUUIDPipe } from '@nestjs/common';
 
 @Controller('stills')
 export class StillsController {
@@ -41,18 +42,21 @@ export class StillsController {
   }
 
   @Get('amount/:amount')
-  getAmount(@Param('amount') amount: number) {
+  getAmount(@Param('amount', ParseIntPipe) amount: number) {
     return this.stillsService.getAmount(amount);
   }
 
   @Get('amount/:from/:to')
-  async getRange(@Param('from') from: number, @Param('to') to: number) {
+  async getRange(@Param('from', ParseIntPipe) from: number, @Param('to', ParseIntPipe) to: number) {
     return this.stillsService.getRange(from, to);
   }
 
   @UseGuards(ExistingStillGuard)
   @Get('/:uuid')
-  async getOriginal(@Param('uuid') uuid: string, @Response({ passthrough: true }) res) {
+  async getOriginal(
+    @Param('uuid', ParseUUIDPipe) uuid: string,
+    @Response({ passthrough: true }) res
+  ) {
     const file = this.stillsService.getOriginal(uuid);
     const metadata = await this.stillsService.getMetadata(uuid);
     res.set({
@@ -67,7 +71,10 @@ export class StillsController {
 
   @UseGuards(ExistingStillGuard)
   @Get('/:uuid/thumbnail')
-  async getThumbnail(@Param('uuid') uuid: string, @Response({ passthrough: true }) res) {
+  async getThumbnail(
+    @Param('uuid', ParseUUIDPipe) uuid: string,
+    @Response({ passthrough: true }) res
+  ) {
     const file = this.stillsService.getThumbnail(uuid);
     const metadata = await this.stillsService.getMetadata(uuid);
     res.set({
@@ -136,7 +143,7 @@ export class StillsController {
 
   @Delete('/:uuid')
   @UseGuards(JwtAuthGuard, ExistingStillGuard)
-  async delete(@Param('uuid') uuid: string) {
+  async delete(@Param('uuid', ParseUUIDPipe) uuid: string) {
     this.stillsService.delete(uuid);
     return 'OK';
   }
