@@ -1,13 +1,19 @@
 import {
   BadRequestException,
+  Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseIntPipe,
   ParseUUIDPipe,
+  Patch,
   Post,
+  UploadedFiles,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('videos')
@@ -35,7 +41,29 @@ export class VideosController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  async createVideo() {
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      // TODO
+    ])
+  )
+  async createVideo(
+    @UploadedFiles()
+    files: {
+      // TODO
+    }
+  ) {
     return 'This action creates a new video';
+  }
+
+  @Patch()
+  @UseGuards(JwtAuthGuard)
+  async replaceVideos(@Body() body: { id: string; position: number }[]) {
+    return 'This action replaces all positions';
+  }
+
+  @Delete('/:id')
+  @UseGuards(JwtAuthGuard)
+  async deleteVideo(@Param('id', ParseUUIDPipe) id: string) {
+    return `This action removes a #id video`;
   }
 }
