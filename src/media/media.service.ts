@@ -230,6 +230,9 @@ export class MediaService {
       const baseName = basename(path);
       const fileName = basename(path).split('.')[0];
       const ffmpeg = createFFmpeg();
+      ffmpeg.setProgress((progress) => {
+        console.log(progress);
+      }); // TODO: disable in production
       await ffmpeg.load();
       ffmpeg.FS('writeFile', baseName + Constants.video_extension, await fetchFile(path));
       process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0'; // TODO: disable in production
