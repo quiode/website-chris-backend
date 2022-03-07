@@ -45,7 +45,7 @@ export class VideosController {
   }
 
   @Get('/:id/:photo')
-  async getPhoto(
+  getPhoto(
     @Param('id', ParseUUIDPipe) id: string,
     @Param('photo', ParseIntPipe) photo: number,
     @Response({ passthrough: true }) res
