@@ -32,7 +32,7 @@ export class StillsController {
   constructor(private stillsService: StillsService) {}
 
   @Get()
-  async getAll() {
+  getAll() {
     return this.stillsService.getAll();
   }
 
