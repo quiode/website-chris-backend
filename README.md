@@ -90,6 +90,16 @@ Example Response:
 
 <!-- `https://domain:3000/stills/uuid` _inserts still into new position (position has to be a json body)_
 `https://domain:3000/stills/uuid1/uuid2` _replaces two positions with each other_ -->
-<!-- TODO: this -->
+<!-- TODO -->
 
 `https://doimain:3000/stills/replace`
+
+### Videos
+
+#### GET
+
+<!-- TODO -->
+
+#### POST
+
+<!-- TODO -->

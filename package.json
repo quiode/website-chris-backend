@@ -44,6 +44,7 @@
     "crypto": "^1.0.1",
     "csurf": "^1.11.0",
     "express-session": "^1.17.2",
+    "hbs": "^4.2.0",
     "helmet": "^5.0.2",
     "jimp": "^0.16.1",
     "passport": "^0.5.2",

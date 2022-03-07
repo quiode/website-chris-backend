@@ -46,3 +46,6 @@ lerna-debug.log*
 # Website
 /website/*
 !website/.git*
+
+# Testing files
+temp.json

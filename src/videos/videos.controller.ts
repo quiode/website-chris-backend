@@ -18,9 +18,9 @@ import {
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { VideosService } from './videos.service';
+import { VideosService, VideoBody } from './videos.service';
 import { Videos } from './videos.entity';
-import { createReadStream } from 'fs';
+import { createReadStream, readFileSync } from 'fs';
 import { join } from 'path';
 
 @Controller('videos')
@@ -66,17 +66,83 @@ export class VideosController {
   @Post()
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(
-    FileFieldsInterceptor([
-      // TODO
-    ])
+    FileFieldsInterceptor(
+      [
+        { name: 'video', maxCount: 1 },
+        { name: 'picture1', maxCount: 1 },
+        { name: 'picture2', maxCount: 1 },
+        { name: 'picture3', maxCount: 1 },
+        { name: 'metadata', maxCount: 1 },
+      ],
+      {
+        limits: {
+          fileSize: Constants.max_file_size,
+        },
+        dest: Constants.temp_upload_path,
+        fileFilter: (req, file, cb) => {
+          switch (file.fieldname) {
+            case 'video':
+              if (file.mimetype !== Constants.video_mimetype) {
+                cb(new BadRequestException('Invalid video file'), false);
+              } else {
+                cb(null, true);
+              }
+              break;
+            case 'picture1':
+            case 'picture2':
+            case 'picture3':
+              if (file.mimetype !== Constants.image_mimetype) {
+                cb(new BadRequestException('Invalid image file'), false);
+              } else {
+                cb(null, true);
+              }
+              break;
+            case 'metadata':
+              if (file.mimetype !== 'application/json') {
+                cb(new BadRequestException('Invalid metadata file'), false);
+              } else {
+                cb(null, true);
+              }
+              break;
+            default:
+              cb(new BadRequestException('Invalid file'), false);
+              break;
+          }
+        },
+      }
+    )
   )
   async createVideo(
     @UploadedFiles()
     files: {
-      // TODO
+      video?: Express.Multer.File[];
+      picture1?: Express.Multer.File[];
+      picture2?: Express.Multer.File[];
+      picture3?: Express.Multer.File[];
+      metadata?: Express.Multer.File[];
     }
   ) {
-    return 'This action creates a new video';
+    if (
+      !files.video ||
+      !files.picture1 ||
+      !files.picture2 ||
+      !files.picture3 ||
+      !files.metadata ||
+      files.video.length !== 1 ||
+      files.picture1.length !== 1 ||
+      files.picture2.length !== 1 ||
+      files.picture3.length !== 1 ||
+      files.metadata.length !== 1
+    ) {
+      throw new BadRequestException('Invalid files');
+    }
+    const video = files.video[0];
+    const picture1 = files.picture1[0];
+    const picture2 = files.picture2[0];
+    const picture3 = files.picture3[0];
+    const metadata = files.metadata[0];
+    const videoBody: VideoBody = JSON.parse(readFileSync(metadata.path).toString());
+    return this.videosService.createVideo(videoBody, video, [picture1, picture2, picture3]);
   }
 
   @Patch()

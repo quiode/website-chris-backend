@@ -5,6 +5,9 @@ import { AppModule } from './app.module';
 import * as csurf from 'csurf';
 import * as fs from 'fs';
 import session from 'express-session';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
+import { Constants } from './constants';
 
 const httpsOptions = {
   key: fs.readFileSync('./secrets/private-key.pem'),
@@ -12,7 +15,8 @@ const httpsOptions = {
 };
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { httpsOptions });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { httpsOptions });
+  app.useStaticAssets(join(__dirname, '..', 'public'), { index: false, prefix: '/public/' });
   app.use(helmet());
   // app.use(cookieParser());
   // app.use(
@@ -28,6 +32,6 @@ async function bootstrap() {
     exposedHeaders: ['uuid', 'position', 'hash'],
   });
   app.setGlobalPrefix('api');
-  await app.listen(3000);
+  await app.listen(Constants.port);
 }
 bootstrap();

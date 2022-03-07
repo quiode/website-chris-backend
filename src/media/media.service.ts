@@ -15,6 +15,9 @@ import Jimp = require('jimp');
 import { Stills } from 'src/stills/stills.entity';
 import { Videos } from 'src/videos/videos.entity';
 import { Music } from 'src/music/music.entity';
+import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
+import { basename, extname } from 'path';
+import { Constants } from '../constants';
 
 @Injectable()
 export class MediaService {
@@ -214,6 +217,56 @@ export class MediaService {
       return false;
     } finally {
       await queryRunner.release();
+    }
+  }
+
+  /**
+   *
+   * @param path path to the file
+   * @returns watermarks the file, resizes the file, safes it to a constant location and returns true on success
+   */
+  async waterMarkVideo(path: string) {
+    try {
+      const baseName = basename(path);
+      const fileName = basename(path).split('.')[0];
+      const ffmpeg = createFFmpeg();
+      await ffmpeg.load();
+      ffmpeg.FS('writeFile', baseName + Constants.video_extension, await fetchFile(path));
+      process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0'; // TODO: disable in production
+      ffmpeg.FS(
+        'writeFile',
+        fileName + '_watermark.png',
+        await fetchFile('https://localhost:3000/public/VideoWaterMark.png')
+      );
+      await ffmpeg.run(
+        '-i',
+        baseName + Constants.video_extension,
+        '-vf',
+        'scale=1920:-1',
+        baseName + '_resized' + Constants.video_extension
+      );
+      ffmpeg.FS('unlink', baseName + Constants.video_extension);
+      await ffmpeg.run(
+        '-i',
+        baseName + '_resized' + Constants.video_extension,
+        '-i',
+        fileName + '_watermark.png',
+        '-filter_complex',
+        'overlay=10:10',
+        baseName + Constants.video_extension
+      );
+      ffmpeg.FS('unlink', baseName + '_resized' + Constants.video_extension);
+      fs.mkdirSync(Constants.videos_path, { recursive: true });
+      fs.writeFileSync(
+        Constants.videos_path + '/' + baseName + Constants.video_extension,
+        ffmpeg.FS('readFile', baseName + Constants.video_extension)
+      );
+      ffmpeg.exit();
+      fs.rmSync(path);
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
     }
   }
 }
