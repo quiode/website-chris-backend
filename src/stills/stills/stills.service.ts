@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-  OnModuleInit,
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createReadStream, ReadStream } from 'fs';
 import { join } from 'path/posix';
@@ -235,7 +230,7 @@ export class StillsService implements OnModuleInit {
       for (let index = 0; index < body.length; index++) {
         const element = body[index];
         iserror =
-          (await this.stillsRepository.findOne({
+          (await await queryRunner.manager.findOne(Stills, {
             where: { id: element.id },
           })) === undefined;
       }
@@ -244,15 +239,23 @@ export class StillsService implements OnModuleInit {
       } else {
         for (let index = 0; index < body.length; index++) {
           const element = body[index];
-          const still = await this.stillsRepository.findOne({
+          const still = await queryRunner.manager.findOne(Stills, {
             where: { id: element.id },
           });
           const position = still.position;
-          await this.stillsRepository.update({ id: element.id }, { position: (position + 1) * -1 });
+          await queryRunner.manager.update(
+            Stills,
+            { id: element.id },
+            { position: (position + 1) * -1 }
+          );
         }
         for (let index = 0; index < body.length; index++) {
           const element = body[index];
-          await this.stillsRepository.update({ id: element.id }, { position: element.position });
+          await queryRunner.manager.update(
+            Stills,
+            { id: element.id },
+            { position: element.position }
+          );
         }
       }
       await queryRunner.commitTransaction();
