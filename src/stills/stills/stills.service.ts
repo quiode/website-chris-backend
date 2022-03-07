@@ -13,8 +13,8 @@ import { Constants } from '../../constants';
 import * as fs from 'fs';
 import * as crypto from 'crypto';
 import { MediaService } from 'src/media/media.service';
-import Jimp = require('jimp');
 import { Font } from '@jimp/plugin-print';
+import Jimp = require('jimp');
 
 export interface updateBody {
   uuid: string;
@@ -98,7 +98,7 @@ export class StillsService implements OnModuleInit {
     } else {
       font = this.fontSmall;
     }
-    await loadedImage.print(font, 10, 10, watermark).write(filePath);
+    await loadedImage.print(font, 10, 10, watermark).writeAsync(filePath);
 
     fs.rmSync(join(process.cwd(), file.path), { recursive: true });
     // make thumbnail
@@ -110,7 +110,15 @@ export class StillsService implements OnModuleInit {
       Constants.stills_thumbnails_path,
       uuid + Constants.image_extension
     );
-    this.compressImage(filePath, thumbnailPath);
+    if (!(await this.compressImage(filePath, thumbnailPath))) {
+      try {
+        fs.rmSync(filePath, { recursive: true });
+      } catch (e) {}
+      try {
+        fs.rmSync(thumbnailPath, { recursive: true });
+      } catch (e) {}
+      throw new InternalServerErrorException('could not create thumbnail');
+    }
     // save metadata
     const still = new Stills();
     still.id = uuid;

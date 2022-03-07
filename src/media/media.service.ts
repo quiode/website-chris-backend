@@ -2,8 +2,8 @@ import { Repository, LessThan, Between, MoreThanOrEqual } from 'typeorm';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import * as fs from 'fs';
 import * as crypto from 'crypto';
-import * as sharp from 'sharp';
 import { join } from 'path';
+import Jimp = require('jimp');
 import { Stills } from 'src/stills/stills.entity';
 import { Videos } from 'src/videos/videos.entity';
 import { Music } from 'src/music/music.entity';
@@ -56,18 +56,16 @@ export class MediaService {
     });
   }
 
-  compressImage(path: string, output: string) {
-    return sharp(path, { failOnError: false })
-      .jpeg({ quality: 40 })
-      .resize(1080)
-      .toFile(output)
-      .catch(() => {
-        return sharp(path, { failOnError: false })
-          .png({ quality: 40 })
-          .resize(1080)
-          .toFormat('jpg')
-          .toFile(output);
-      });
+  async compressImage(path: string, output: string) {
+    try {
+      const file = await Jimp.read(path);
+      file.quality(60).resize(1080, Jimp.AUTO).write(output);
+
+      return true;
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
   }
 
   getAll(repository: Repository<Stills | Videos | Music>) {
