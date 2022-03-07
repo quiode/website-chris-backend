@@ -21,6 +21,13 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@ffmpeg/core": "^0.10.0",
+    "@ffmpeg/ffmpeg": "^0.10.1",
+    "@jimp/bmp": "^0.16.1",
+    "@jimp/gif": "^0.16.1",
+    "@jimp/jpeg": "^0.16.1",
+    "@jimp/png": "^0.16.1",
+    "@jimp/tiff": "^0.16.1",
     "@nestjs/common": "^8.0.0",
     "@nestjs/core": "^8.0.0",
     "@nestjs/jwt": "^8.0.0",
