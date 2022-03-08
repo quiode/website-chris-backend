@@ -290,4 +290,8 @@ export class MediaService {
       return false;
     }
   }
+
+  async waterMarkImage(path: string, output: string, newFileName: string) {
+    return false;
+  }
 }

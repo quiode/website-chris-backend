@@ -38,16 +38,32 @@ export class VideosService {
     video: Express.Multer.File,
     images: Express.Multer.File[]
   ): Promise<Videos> {
-    // TODO: add watermark to video
-    const videoUUID = randomUUID();
-    if (!(await this.mediaService.waterMarkVideo(video.path, Constants.videos_path, videoUUID))) {
-      throw new InternalServerErrorException('Could not watermark video');
+    try {
+      const videoUUID = randomUUID();
+      if (!(await this.mediaService.waterMarkVideo(video.path, Constants.videos_path, videoUUID))) {
+        throw new InternalServerErrorException('Could not watermark video');
+      }
+      // TODO: add watermark to images
+      for await (const image of images) {
+        const imageUUID = randomUUID();
+        if (
+          !(await this.mediaService.waterMarkImage(
+            image.path,
+            Constants.videos_images_path,
+            imageUUID
+          ))
+        ) {
+          throw new InternalServerErrorException('Could not watermark image');
+        }
+      }
+      // TODO: save video -> done in watermarkVideo
+      // TODO: save images -> done in watermarkImage
+      // TODO: save metadata
+    } catch (error) {
+      // TODO: delete video, images and metadata
+      console.error(error);
+      throw new InternalServerErrorException('Could not create video');
     }
-    // TODO: add watermark to images
-    // TODO: save video
-    // TODO: save images
-    // TODO: save metadata
-    // On error: delete video, images and metadata
     return null;
   }
 }
