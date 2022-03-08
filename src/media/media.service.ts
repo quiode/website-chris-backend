@@ -10,14 +10,14 @@ import {
 import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import * as fs from 'fs';
 import * as crypto from 'crypto';
-import { join } from 'path';
+import { dirname, join } from 'path';
 import Jimp = require('jimp');
 import { Stills } from 'src/stills/stills.entity';
 import { Videos } from 'src/videos/videos.entity';
 import { Music } from 'src/music/music.entity';
-import { createFFmpeg, fetchFile } from '@ffmpeg/ffmpeg';
 import { basename } from 'path';
 import { Constants } from '../constants';
+import Ffmpeg = require('fluent-ffmpeg');
 
 @Injectable()
 export class MediaService {
@@ -225,54 +225,68 @@ export class MediaService {
    * @param path path to the file
    * @returns watermarks the file, resizes the file, safes it to a constant location and returns true on success
    */
-  async waterMarkVideo(path: string) {
-    throw new Error('Method not implemented.');
-    try {
-      const baseName = basename(path);
-      const fileName = basename(path).split('.')[0];
-      const ffmpeg = createFFmpeg();
-      ffmpeg.setProgress((progress) => {
-        console.log(progress);
-      }); // TODO: disable in production
-      await ffmpeg.load();
-      ffmpeg.FS('writeFile', baseName + Constants.video_extension, await fetchFile(path));
-      process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '0'; // TODO: disable in production
-      ffmpeg.FS(
-        'writeFile',
-        fileName + '_watermark.png',
-        await fetchFile('https://localhost:3000/public/VideoWaterMark.png')
+  async waterMarkVideo(path: string, output: string, newFileName: string) {
+    const resizing = await new Promise<boolean>((resolve, reject) => {
+      const temp_output = join(
+        process.cwd(),
+        Constants.temp_upload_path,
+        newFileName + Constants.video_extension
       );
-      process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '1'; // TODO: disable in production
-      await ffmpeg.run(
-        '-i',
-        baseName + Constants.video_extension,
-        '-vf',
-        'scale=1920:-1',
-        baseName + '_resized' + Constants.video_extension
-      );
-      ffmpeg.FS('unlink', baseName + Constants.video_extension);
-      await ffmpeg.run(
-        '-i',
-        baseName + '_resized' + Constants.video_extension,
-        '-i',
-        fileName + '_watermark.png',
-        '-filter_complex',
-        'overlay=10:10',
-        baseName + Constants.video_extension
-      );
-      ffmpeg.FS('unlink', baseName + '_resized' + Constants.video_extension);
-      ffmpeg.FS('unlink', fileName + '_watermark.png');
       fs.mkdirSync(Constants.videos_path, { recursive: true });
-      fs.writeFileSync(
-        Constants.videos_path + '/' + baseName + Constants.video_extension,
-        ffmpeg.FS('readFile', baseName + Constants.video_extension)
-      );
-      ffmpeg.FS('unlink', baseName + Constants.video_extension);
-      ffmpeg.exit();
-      fs.rmSync(path);
-      return true;
-    } catch (error) {
-      console.error(error);
+      const command = Ffmpeg(path)
+        .on('progress', (progress) => {
+          console.log(progress);
+        })
+        .size('1920x?')
+        .toFormat(Constants.video_extension.replace('.', ''))
+        .save(temp_output)
+        .on('error', (error) => {
+          console.error(error);
+          fs.rmSync(path);
+          fs.rmSync(temp_output);
+          reject(false);
+        })
+        .on('end', () => {
+          fs.rmSync(path);
+          resolve(true);
+        });
+    });
+    if (resizing) {
+      const overlay = await new Promise<boolean>((resolve, reject) => {
+        const input = join(
+          process.cwd(),
+          Constants.temp_upload_path,
+          newFileName + Constants.video_extension
+        );
+        const outputPath = join(output, newFileName + Constants.video_extension);
+        const command = Ffmpeg(input);
+        command
+          .on('progress', (progress) => {
+            console.log(progress);
+          })
+          .input(join(process.cwd(), 'public/VideoWaterMark.png'))
+          .complexFilter({
+            filter: 'overlay',
+            options: { x: 10, y: 10 },
+          })
+          .on('error', (error) => {
+            console.error(error);
+            fs.rmSync(input);
+            fs.rmSync(outputPath);
+            reject(false);
+          })
+          .on('end', () => {
+            fs.rmSync(input);
+            resolve(true);
+          })
+          .save(outputPath);
+      });
+      if (overlay) {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
       return false;
     }
   }

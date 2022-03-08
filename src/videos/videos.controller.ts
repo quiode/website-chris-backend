@@ -75,9 +75,6 @@ export class VideosController {
         { name: 'metadata', maxCount: 1 },
       ],
       {
-        limits: {
-          fileSize: Constants.max_file_size,
-        },
         dest: Constants.temp_upload_path,
         fileFilter: (req, file, cb) => {
           switch (file.fieldname) {
