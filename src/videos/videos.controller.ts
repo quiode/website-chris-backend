@@ -125,20 +125,18 @@ export class VideosController {
       picture1?: Express.Multer.File[];
       picture2?: Express.Multer.File[];
       picture3?: Express.Multer.File[];
-      metadata?: Express.Multer.File[];
-    }
+    },
+    @Body() videoBody: { metadata: string }
   ) {
     if (
       !files.video ||
       !files.picture1 ||
       !files.picture2 ||
       !files.picture3 ||
-      !files.metadata ||
       files.video.length !== 1 ||
       files.picture1.length !== 1 ||
       files.picture2.length !== 1 ||
-      files.picture3.length !== 1 ||
-      files.metadata.length !== 1
+      files.picture3.length !== 1
     ) {
       throw new BadRequestException('Invalid files');
     }
@@ -146,12 +144,13 @@ export class VideosController {
     const picture1 = files.picture1[0];
     const picture2 = files.picture2[0];
     const picture3 = files.picture3[0];
-    const metadata = files.metadata[0];
-    const videoBody: VideoBody = JSON.parse(readFileSync(metadata.path).toString());
     return this.videosService
-      .createVideo(videoBody, video, [picture1, picture2, picture3])
+      .createVideo(JSON.parse(videoBody.metadata) as VideoBody, video, [
+        picture1,
+        picture2,
+        picture3,
+      ])
       .then((video) => {
-        fs.rmSync(metadata.path, { recursive: true, force: true });
         return video;
       });
   }
