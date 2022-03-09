@@ -42,26 +42,34 @@ export class VideosController {
       'Content-Type': `video/${Constants.video_extension.replace('.', '')}`,
       'Content-Disposition': `attachment; filename="${id}${Constants.video_extension}"`,
     });
-    return new StreamableFile(null);
+    try {
+      fs.accessSync(join(Constants.videos_path, id + Constants.video_extension));
+    } catch (e) {
+      throw new BadRequestException('Video not found');
+    }
+    const file = fs.createReadStream(join(Constants.videos_path, id + Constants.video_extension));
+    return new StreamableFile(file);
   }
 
   @Get('/:id/:photo')
   getPhoto(
     @Param('id', ParseUUIDPipe) id: string,
-    @Param('photo', ParseIntPipe) photo: number,
+    @Param('photo', ParseUUIDPipe) photo: string,
     @Response({ passthrough: true }) res
   ): StreamableFile {
-    if (photo < 0 || photo >= 3) {
-      throw new BadRequestException('Photo does not exist');
-    }
     res.set({
       'Content-Type': `image/jpeg`,
-      'Content-Disposition': `attachment; filename="${
-        id
-        // TODO
-      }${Constants.image_extension}"`,
+      'Content-Disposition': `attachment; filename="${photo}${Constants.image_extension}"`,
     });
-    return new StreamableFile(null);
+    try {
+      fs.accessSync(join(Constants.videos_images_path, photo + Constants.image_extension));
+    } catch (e) {
+      throw new BadRequestException('Image not found');
+    }
+    const file = fs.createReadStream(
+      join(Constants.videos_images_path, photo + Constants.image_extension)
+    );
+    return new StreamableFile(file);
   }
 
   @Post()
