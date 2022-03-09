@@ -22,6 +22,7 @@ import { VideosService, VideoBody } from './videos.service';
 import { Videos } from './videos.entity';
 import { createReadStream, readFileSync } from 'fs';
 import { join } from 'path';
+import * as fs from 'fs';
 
 @Controller('videos')
 export class VideosController {
@@ -139,7 +140,12 @@ export class VideosController {
     const picture3 = files.picture3[0];
     const metadata = files.metadata[0];
     const videoBody: VideoBody = JSON.parse(readFileSync(metadata.path).toString());
-    return this.videosService.createVideo(videoBody, video, [picture1, picture2, picture3]);
+    return this.videosService
+      .createVideo(videoBody, video, [picture1, picture2, picture3])
+      .then((video) => {
+        fs.rmSync(metadata.path, { recursive: true, force: true });
+        return video;
+      });
   }
 
   @Patch()

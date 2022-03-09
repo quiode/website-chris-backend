@@ -1,21 +1,12 @@
-import {
-  Repository,
-  LessThan,
-  Between,
-  MoreThanOrEqual,
-  Entity,
-  Connection,
-  EntityTarget,
-} from 'typeorm';
+import { Repository, LessThan, Between, MoreThanOrEqual, Connection, EntityTarget } from 'typeorm';
 import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import * as fs from 'fs';
 import * as crypto from 'crypto';
-import { dirname, join } from 'path';
+import { join } from 'path';
 import Jimp = require('jimp');
 import { Stills } from 'src/stills/stills.entity';
 import { Videos } from 'src/videos/videos.entity';
 import { Music } from 'src/music/music.entity';
-import { basename } from 'path';
 import { Constants } from '../constants';
 import Ffmpeg = require('fluent-ffmpeg');
 
@@ -44,7 +35,7 @@ export class MediaService {
     file: Express.Multer.File,
     repository: Repository<Stills | Videos | Music>
   ): Promise<boolean> {
-    const promise: Promise<string> = this.hashFile(file);
+    const promise: Promise<string> = this.hashFile(file.path);
 
     const hash = await promise;
 
@@ -59,10 +50,10 @@ export class MediaService {
     return false;
   }
 
-  hashFile(file: Express.Multer.File): Promise<string> {
+  hashFile(path: string): Promise<string> {
     return new Promise((resolve, reject) => {
       const hash = crypto.createHash('sha256');
-      const stream = fs.createReadStream(join(process.cwd(), file.path));
+      const stream = fs.createReadStream(join(process.cwd(), path));
       stream.on('error', (err) => reject(err));
       stream.on('data', (chunk) => hash.update(chunk));
       stream.on('end', () => resolve(hash.digest('hex')));
@@ -76,7 +67,7 @@ export class MediaService {
 
       return true;
     } catch (error) {
-      console.error(error);
+      // console.error(error);
       return false;
     }
   }
@@ -235,7 +226,7 @@ export class MediaService {
       fs.mkdirSync(Constants.videos_path, { recursive: true });
       const command = Ffmpeg(path)
         .on('progress', (progress) => {
-          console.log(progress);
+          // console.log(progress);
         })
         .size('1920x?')
         .toFormat(Constants.video_extension.replace('.', ''))
@@ -262,7 +253,7 @@ export class MediaService {
         const command = Ffmpeg(input);
         command
           .on('progress', (progress) => {
-            console.log(progress);
+            // console.log(progress);
           })
           .input(join(process.cwd(), 'public/VideoWaterMark.png'))
           .complexFilter({
@@ -270,7 +261,7 @@ export class MediaService {
             options: { x: 10, y: 10 },
           })
           .on('error', (error) => {
-            console.error(error);
+            // console.error(error);
             fs.rmSync(input);
             fs.rmSync(outputPath);
             reject(false);
@@ -292,6 +283,19 @@ export class MediaService {
   }
 
   async waterMarkImage(path: string, output: string, newFileName: string) {
-    return false;
+    const watermark = '@Christoph Anton-Cornelius Bärtsch';
+    fs.mkdirSync(output, { recursive: true });
+    const result = await this.compressImage(path, join(output, newFileName));
+    // add watermark
+    const font = await Jimp.loadFont(Jimp.FONT_SANS_16_WHITE);
+
+    const loadedImage = await Jimp.read(join(output, newFileName));
+    await loadedImage
+      .print(font, 10, 10, watermark)
+      .writeAsync(join(output, newFileName + Constants.image_extension));
+
+    fs.rmSync(join(output, newFileName), { recursive: true, force: true });
+    fs.rmSync(path, { recursive: true, force: true });
+    return result;
   }
 }

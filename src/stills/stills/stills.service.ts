@@ -67,7 +67,7 @@ export class StillsService implements OnModuleInit {
    * @param file file to be saved
    */
   async save(file: Express.Multer.File) {
-    const promise: Promise<string> = this.mediaService.hashFile(file);
+    const promise: Promise<string> = this.mediaService.hashFile(file.path);
     const watermark = '@Christoph Anton-Cornelius Bärtsch';
 
     // create metadata

@@ -62,11 +62,38 @@ export class VideosService {
         throw new InternalServerErrorException('Could not watermark image');
       }
     }
-    // TODO: save video -> done in watermarkVideo
-    // TODO: save images -> done in watermarkImage
-    // TODO: save metadata
-    // TODO: delete video, images and metadata
-    return null;
+    const videoData = new Videos();
+    videoData.id = videoUUID;
+    videoData.hash = await this.mediaService.hashFile(
+      join(Constants.videos_path, videoUUID + Constants.video_extension)
+    );
+    const hasOne = await this.videosRepository.findOne({ where: { hash: videoData.hash } });
+    if (hasOne) {
+      this.videoErrorCleanup(videoUUID, imageUUIDS);
+      throw new InternalServerErrorException('Video already exists');
+    }
+    videoData.picture1Id = imageUUIDS[0];
+    videoData.picture2Id = imageUUIDS[1];
+    videoData.picture3Id = imageUUIDS[2];
+    videoData.line1 = videoBody.line1;
+    videoData.line2 = videoBody.line2;
+    videoData.url = videoBody.url;
+
+    let counter = 0;
+    while (true) {
+      videoData.position = await this.videosRepository.count();
+      try {
+        await this.videosRepository.save(videoData);
+        break;
+      } catch (e) {
+        if (counter > 10) {
+          this.videoErrorCleanup(videoUUID, imageUUIDS);
+          throw new InternalServerErrorException('Could not save video');
+        }
+        counter++;
+      }
+    }
+    return this.videosRepository.findOne({ where: { id: videoUUID } });
   }
 
   private videoErrorCleanup(videoUUID: string, imageUUIDS: string[]) {
