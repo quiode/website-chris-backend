@@ -165,6 +165,9 @@ export class VideosController {
   @Delete('/:id')
   @UseGuards(JwtAuthGuard)
   async deleteVideo(@Param('id', ParseUUIDPipe) id: string) {
-    return `This action removes a #id video`;
+    if (!(await this.videosService.exists(id))) {
+      throw new BadRequestException('Video not found');
+    }
+    return this.videosService.removeVideo(id);
   }
 }
