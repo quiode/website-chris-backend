@@ -159,7 +159,10 @@ export class VideosController {
   @Patch()
   @UseGuards(JwtAuthGuard)
   async replaceVideos(@Body() body: { id: string; position: number }[]) {
-    return 'This action replaces all positions';
+    if (await !this.videosService.replaceVideos(body)) {
+      throw new BadRequestException('Invalid videos');
+    }
+    return this.videosService.getAll();
   }
 
   @Delete('/:id')

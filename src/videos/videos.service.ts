@@ -132,4 +132,11 @@ export class VideosService {
       return video !== undefined;
     });
   }
+
+  async replaceVideos(body: { id: string; position: number }[]) {
+    if (body.length < (await this.videosRepository.count())) {
+      return false;
+    }
+    return this.mediaService.replace(body, Videos);
+  }
 }
