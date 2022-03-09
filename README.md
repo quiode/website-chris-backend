@@ -103,3 +103,11 @@ Example Response:
 #### POST
 
 <!-- TODO -->
+
+#### DELETE
+
+<!-- TODO -->
+
+#### PATCH
+
+<!-- TODO -->
