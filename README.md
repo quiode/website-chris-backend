@@ -98,11 +98,12 @@ Example Response:
 
 #### GET
 
-<!-- TODO -->
+`https://domain:3000/videos/uuid` _returns the video as stream_
+`https://domain:3000/videos` _returns a list of all videos_
 
 #### POST
 
-<!-- TODO -->
+`https://domain:3000/videos` _uploads a video in a from, form fields: video, picture1, picture2, picture3, metadata: {url, line1, line2}_
 
 #### DELETE
 
