@@ -28,7 +28,7 @@ import { join } from 'path';
     MusicModule,
     StillsModule,
     ThrottlerModule.forRoot({
-      ttl: 5,
+      ttl: 1,
       limit: 100,
     }),
     AuthModule,
