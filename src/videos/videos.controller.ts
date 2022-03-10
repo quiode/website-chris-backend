@@ -157,7 +157,9 @@ export class VideosController {
 
   @Patch()
   @UseGuards(JwtAuthGuard)
-  async replaceVideos(@Body() body: { id: string; position: number }[]) {
+  async replaceVideos(
+    @Body() body: { id: string; position: number; line1: string; line2: string; url: string }[]
+  ) {
     if (await !this.videosService.replaceVideos(body)) {
       throw new BadRequestException('Invalid videos');
     }

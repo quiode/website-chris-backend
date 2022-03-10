@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Multer } from 'multer';
-import { DeleteResult, Repository } from 'typeorm';
+import { DeleteResult, Repository, Connection } from 'typeorm';
 import { Videos } from './videos.entity';
 import { MediaService } from '../media/media.service';
 import { Constants } from '../constants';
@@ -29,7 +29,8 @@ export interface VideoData extends VideoBody {
 export class VideosService {
   constructor(
     @InjectRepository(Videos) private videosRepository: Repository<Videos>,
-    private mediaService: MediaService
+    private mediaService: MediaService,
+    private connection: Connection
   ) {}
 
   getAll(): Promise<Videos[]> {
@@ -133,10 +134,45 @@ export class VideosService {
     });
   }
 
-  async replaceVideos(body: { id: string; position: number }[]) {
+  async replaceVideos(
+    body: { id: string; position: number; line1: string; line2: string; url: string }[]
+  ) {
     if (body.length < (await this.videosRepository.count())) {
       return false;
     }
-    return this.mediaService.replace(body, Videos);
+    const runner = this.connection.createQueryRunner();
+    await runner.connect();
+    await runner.startTransaction();
+    try {
+      for (const video of body) {
+        const videoData = await this.videosRepository.findOne({ where: { id: video.id } });
+        await runner.manager.update(
+          Videos,
+          { id: video.id },
+          {
+            line1: video.line1,
+            line2: video.line2,
+            url: video.url,
+            position: (videoData.position + 1) * -1,
+          }
+        );
+      }
+      for (const video of body) {
+        await runner.manager.update(
+          Videos,
+          { id: video.id },
+          {
+            position: video.position,
+          }
+        );
+      }
+      await runner.commitTransaction();
+      await runner.release();
+      return true;
+    } catch (e) {
+      await runner.rollbackTransaction();
+      await runner.release();
+      return false;
+    }
   }
 }
