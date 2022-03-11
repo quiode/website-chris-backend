@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Multer } from 'multer';
-import { DeleteResult, Repository, Connection } from 'typeorm';
+import { DeleteResult, Repository, Connection, MoreThan, MoreThanOrEqual } from 'typeorm';
 import { Videos } from './videos.entity';
 import { MediaService } from '../media/media.service';
 import { Constants } from '../constants';
@@ -111,7 +111,7 @@ export class VideosService {
     }
   }
 
-  async removeVideo(videoId: string): Promise<DeleteResult> {
+  async removeVideo(videoId: string): Promise<Videos[]> {
     const images_urls = await this.videosRepository
       .findOne({ where: { id: videoId } })
       .then((video) => {
@@ -125,7 +125,24 @@ export class VideosService {
         force: true,
       });
     }
-    return this.videosRepository.delete({ id: videoId });
+    const biggerVideos = await this.videosRepository.find({
+      where: {
+        position: MoreThanOrEqual(
+          await (
+            await this.videosRepository.findOne({ where: { id: videoId } })
+          ).position
+        ),
+      },
+      order: { position: 'ASC' },
+    });
+
+    await this.videosRepository.delete({ id: videoId });
+
+    for (const video of biggerVideos) {
+      await this.videosRepository.update(video.id, { position: video.position - 1 });
+    }
+
+    return this.getAll();
   }
 
   async exists(videoId: string): Promise<boolean> {
