@@ -1,4 +1,5 @@
 export const Constants = {
+  prod: false,
   stills_path: 'assets/stills',
   stills_thumbnails_path: 'assets/stills/thumbnails',
   videos_path: 'assets/videos/videos',
