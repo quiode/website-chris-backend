@@ -3,8 +3,10 @@ import {
   Body,
   ConflictException,
   Controller,
+  Delete,
   Get,
   Param,
+  Patch,
   Post,
   Res,
   UploadedFiles,
@@ -17,7 +19,7 @@ import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { Constants } from '../../constants';
 import { Response } from 'express';
-import { StreamableFile } from '@nestjs/common';
+import { StreamableFile, InternalServerErrorException } from '@nestjs/common';
 
 @Controller('music')
 export class MusicController {
@@ -40,6 +42,20 @@ export class MusicController {
     }
     const audio = await this.musicService.getAudio(id);
     return new StreamableFile(audio);
+  }
+
+  @Get('/:id/image')
+  async getImage(
+    @Param('id') id: string,
+    @Res({ passthrough: true }) res: Response
+  ): Promise<StreamableFile> {
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Content-Disposition', `attachment; filename=${id}.mp3`);
+    if (!(await this.musicService.checkIfUUIDExists(id))) {
+      throw new BadRequestException('Image not found');
+    }
+    const image = await this.musicService.getImage(id);
+    return new StreamableFile(image);
   }
 
   @Post()
@@ -90,5 +106,23 @@ export class MusicController {
       song: files.song[0],
       image: files.cover[0],
     });
+  }
+
+  @Delete('/:id')
+  @UseGuards(JwtAuthGuard)
+  async delete(@Param('id') id: string): Promise<void> {
+    if (!(await this.musicService.checkIfUUIDExists(id))) {
+      throw new BadRequestException('Song not found');
+    }
+    await this.musicService.delete(id);
+  }
+
+  @Patch()
+  @UseGuards(JwtAuthGuard)
+  async replaceVideos(@Body() music: { id: string; url: string; position: number }[]) {
+    if (!(await this.musicService.replaceMusic(music))) {
+      throw new InternalServerErrorException('Error while replacing music');
+    }
+    return this.musicService.getAll();
   }
 }
