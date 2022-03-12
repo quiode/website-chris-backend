@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { MediaService } from 'src/media/media.service';
 import { Repository } from 'typeorm';
@@ -61,5 +61,13 @@ export class MusicService {
     const hash = await this.mediaService.hashFile(songPath);
     const result = await this.stillsRepository.findOne({ where: { hash: hash } });
     return result != undefined;
+  }
+
+  async getAudio(id: string) {
+    const item = await this.stillsRepository.findOne({ where: { id: id } });
+    if (item == undefined) {
+      throw new NotFoundException('Music not found');
+    }
+    return fs.createReadStream(Constants.music_path + '/' + item.id + Constants.music_extension);
   }
 }

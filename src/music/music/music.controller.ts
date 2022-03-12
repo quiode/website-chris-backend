@@ -4,7 +4,9 @@ import {
   ConflictException,
   Controller,
   Get,
+  Param,
   Post,
+  Res,
   UploadedFiles,
   UseGuards,
   UseInterceptors,
@@ -14,6 +16,8 @@ import { MusicService } from './music.service';
 import { JwtAuthGuard } from '../../auth/jwt-auth.guard';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { Constants } from '../../constants';
+import { Response } from 'express';
+import { StreamableFile } from '@nestjs/common';
 
 @Controller('music')
 export class MusicController {
@@ -22,6 +26,20 @@ export class MusicController {
   @Get()
   getAll() {
     return this.musicService.getAll();
+  }
+
+  @Get('/:id')
+  async getAudio(
+    @Param('id') id: string,
+    @Res({ passthrough: true }) res: Response
+  ): Promise<StreamableFile> {
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Content-Disposition', `attachment; filename=${id}.mp3`);
+    if (!(await this.musicService.checkIfUUIDExists(id))) {
+      throw new BadRequestException('Song not found');
+    }
+    const audio = await this.musicService.getAudio(id);
+    return new StreamableFile(audio);
   }
 
   @Post()
