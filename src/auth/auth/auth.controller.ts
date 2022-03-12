@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Controller,
   Get,
@@ -14,6 +15,7 @@ import { LocalAuthGuard } from '../local-auth.guard';
 import { AuthService } from './auth.service';
 import * as bcrypt from 'bcrypt';
 import { JwtAuthGuard } from '../jwt-auth.guard';
+import { Constants } from '../../constants';
 
 @Controller('auth')
 export class AuthController {
@@ -28,17 +30,20 @@ export class AuthController {
     return this.authService.login(req.user);
   }
 
-  // TODO: This is a debug endpoint, remove it before production
   @Get('/signup/:username/:password')
   async signup(@Param('username') username: string, @Param('password') password: string) {
-    if (await this.userRepository.findOne({ username: username })) {
-      throw new ConflictException('User already exists');
+    if (Constants.prod) {
+      throw new BadRequestException('Signup is disabled in production');
+    } else {
+      if (await this.userRepository.findOne({ username: username })) {
+        throw new ConflictException('User already exists');
+      }
+      await this.userRepository.save({
+        username: username,
+        password: await bcrypt.hash(password, bcrypt.genSaltSync(10)),
+        lastLogin: new Date(),
+      });
+      return 'User created';
     }
-    await this.userRepository.save({
-      username: username,
-      password: await bcrypt.hash(password, bcrypt.genSaltSync(10)),
-      lastLogin: new Date(),
-    });
-    return 'User created';
   }
 }
