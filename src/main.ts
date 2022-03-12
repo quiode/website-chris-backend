@@ -38,7 +38,7 @@ async function bootstrap() {
       'Content-Length',
       'Content-Type',
     ],
-    allowedHeaders: ['Accept Ranges'],
+    allowedHeaders: ['Accept-Ranges', 'Content-Range', 'authorization'],
   });
   app.setGlobalPrefix('api');
   await app.listen(Constants.port);

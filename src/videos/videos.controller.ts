@@ -6,10 +6,11 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   ParseUUIDPipe,
   Patch,
   Post,
+  Req,
+  Res,
   Response,
   StreamableFile,
   UploadedFiles,
@@ -20,9 +21,9 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { VideosService, VideoBody } from './videos.service';
 import { Videos } from './videos.entity';
-import { createReadStream, readFileSync } from 'fs';
 import { join } from 'path';
 import * as fs from 'fs';
+import * as express from 'express';
 
 @Controller('videos')
 export class VideosController {
@@ -36,26 +37,48 @@ export class VideosController {
   @Get('/:id')
   getVideo(
     @Param('id', ParseUUIDPipe) id: string,
-    @Response({ passthrough: true }) res
-  ): StreamableFile {
-    res.set({
-      'Content-Type': `video/${Constants.video_extension.replace('.', '')}`,
-      'Content-Disposition': `attachment; filename="${id}${Constants.video_extension}"`,
-    });
+    @Res() res: express.Response,
+    @Req() req: express.Request
+  ) {
     try {
       fs.accessSync(join(Constants.videos_path, id + Constants.video_extension));
     } catch (e) {
       throw new BadRequestException('Video not found');
     }
-    const file = fs.createReadStream(join(Constants.videos_path, id + Constants.video_extension));
-    return new StreamableFile(file);
+    const path = join(Constants.videos_path, id + Constants.video_extension);
+    const stat = fs.statSync(path);
+    const fileSize = stat.size;
+    const range = req.headers.range;
+    if (range) {
+      const parts = range.replace(/bytes=/, '').split('-');
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      const chunksize = end - start + 1;
+      const file = fs.createReadStream(path, { start, end });
+      const head = {
+        'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+        'Accept-Ranges': 'bytes',
+        'Content-Length': chunksize,
+        'Content-Type': 'video/mp4',
+        'Cross-Origin-Resource-Policy': 'cross-origin',
+      };
+      res.writeHead(206, head);
+      file.pipe(res);
+    } else {
+      const head = {
+        'Content-Length': fileSize,
+        'Content-Type': 'video/mp4',
+      };
+      res.writeHead(200, head);
+      fs.createReadStream(path).pipe(res);
+    }
   }
 
   @Get('/:id/:photo')
   getPhoto(
     @Param('id', ParseUUIDPipe) id: string,
     @Param('photo', ParseUUIDPipe) photo: string,
-    @Response({ passthrough: true }) res
+    @Response({ passthrough: true }) res: express.Response
   ): StreamableFile {
     res.set({
       'Content-Type': `image/jpeg`,
