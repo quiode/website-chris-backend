@@ -21,7 +21,7 @@ async function bootstrap() {
           fontSrc: [`'self'`, 'fonts.gstatic.com', 'fonts.googleapis.com'],
           imgSrc: [`'self'`, 'data:'],
           scriptSrc: [`'self'`],
-          connectSrc: [`'self'`, 'fonts.googleapis.com'],
+          connectSrc: [`'self'`, 'fonts.googleapis.com', 'fonts.gstatic.com'],
           scriptSrcAttr: [`'self'`, `'unsafe-inline'`],
         },
       },
