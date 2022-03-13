@@ -22,6 +22,7 @@ async function bootstrap() {
           imgSrc: [`'self'`, 'data:', 'cdn.jsdelivr.net'],
           scriptSrc: [`'self'`],
           connectSrc: ['self', 'fonts.googleapis.com'],
+          scriptSrcAttr: ['self', 'unsafe-inline'],
         },
       },
     })
