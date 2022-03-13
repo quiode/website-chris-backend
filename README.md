@@ -2,6 +2,7 @@
 
 ## Setup
 
+- install ffmpeg (https://www.ffmpeg.org/download.html)
 - fill the `ormconfig.json` file with your database connection
 <!-- - replace the certificates in `./secrets` with your own
 - replace the secret key in `constants.ts` with your own -->
