@@ -17,10 +17,11 @@ async function bootstrap() {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: [`'self'`],
-          styleSrc: [`'self'`, `'unsafe-inline'`, 'cdn.jsdelivr.net', 'fonts.googleapis.com'],
+          styleSrc: [`'self'`, `'unsafe-inline'`, 'fonts.googleapis.com'],
           fontSrc: [`'self'`, 'fonts.gstatic.com', 'fonts.googleapis.com'],
           imgSrc: [`'self'`, 'data:', 'cdn.jsdelivr.net'],
-          scriptSrc: [`'self'`, `https: 'unsafe-inline'`, `cdn.jsdelivr.net`, 'unsafe-hashes'],
+          scriptSrc: [`'self'`],
+          connectSrc: ['self', 'fonts.googleapis.com'],
         },
       },
     })
