@@ -12,19 +12,19 @@ import { Constants } from './constants';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.useStaticAssets(join(__dirname, '..', 'public'), { index: false, prefix: '/public/' });
-  app.use(
-    helmet({
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: [`'self'`],
-          styleSrc: [`'self'`, `'unsafe-inline'`, 'cdn.jsdelivr.net', 'fonts.googleapis.com'],
-          fontSrc: [`'self'`, 'fonts.gstatic.com'],
-          imgSrc: [`'self'`, 'data:', 'cdn.jsdelivr.net'],
-          scriptSrc: [`'self'`, `https: 'unsafe-inline'`, `cdn.jsdelivr.net`, 'unsafe-hashes'],
-        },
-      },
-    })
-  );
+  // app.use(
+  //   helmet({
+  //     contentSecurityPolicy: {
+  //       directives: {
+  //         defaultSrc: [`'self'`],
+  //         styleSrc: [`'self'`, `'unsafe-inline'`, 'cdn.jsdelivr.net', 'fonts.googleapis.com'],
+  //         fontSrc: [`'self'`, 'fonts.gstatic.com'],
+  //         imgSrc: [`'self'`, 'data:', 'cdn.jsdelivr.net'],
+  //         scriptSrc: [`'self'`, `https: 'unsafe-inline'`, `cdn.jsdelivr.net`, 'unsafe-hashes'],
+  //       },
+  //     },
+  //   })
+  // );
   // app.use(cookieParser());
   // app.use(
   //   session({
@@ -34,19 +34,19 @@ async function bootstrap() {
   //   })
   // );
   // app.use(csurf());
-  app.enableCors({
-    origin: ['http://localhost:4200', 'http://localhost:41743', 'https://christoph-baertsch.ch'],
-    exposedHeaders: [
-      'uuid',
-      'position',
-      'hash',
-      'Accept-Ranges',
-      'Content-Range',
-      'Content-Length',
-      'Content-Type',
-    ],
-    allowedHeaders: ['Accept-Ranges', 'Content-Range', 'authorization', 'content-type'],
-  });
+  // app.enableCors({
+  //   origin: ['http://localhost:4200', 'http://localhost:41743', 'https://christoph-baertsch.ch'],
+  //   exposedHeaders: [
+  //     'uuid',
+  //     'position',
+  //     'hash',
+  //     'Accept-Ranges',
+  //     'Content-Range',
+  //     'Content-Length',
+  //     'Content-Type',
+  //   ],
+  //   allowedHeaders: ['Accept-Ranges', 'Content-Range', 'authorization', 'content-type'],
+  // });
   app.setGlobalPrefix('api');
   await app.listen(Constants.port);
 }
