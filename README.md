@@ -3,8 +3,10 @@
 ## Setup
 
 - fill the `ormconfig.json` file with your database connection
-- replace the certificates in `./secrets` with your own
-- replace the secret key in `constants.ts` with your own
+<!-- - replace the certificates in `./secrets` with your own
+- replace the secret key in `constants.ts` with your own -->
+- setup haproxy with ssl certificates and redirect
+- create admin account with signup api
 - set the variable `prod` to `true` in `constants.ts`
 - place static website under `./website`
 - run `typeorm schema:sync` once to sync the database with the schema
