@@ -12,7 +12,19 @@ import { Constants } from './constants';
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   app.useStaticAssets(join(__dirname, '..', 'public'), { index: false, prefix: '/public/' });
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: [`'self'`],
+          styleSrc: [`'self'`, `'unsafe-inline'`, 'cdn.jsdelivr.net', 'fonts.googleapis.com'],
+          fontSrc: [`'self'`, 'fonts.gstatic.com'],
+          imgSrc: [`'self'`, 'data:', 'cdn.jsdelivr.net'],
+          scriptSrc: [`'self'`, `https: 'unsafe-inline'`, `cdn.jsdelivr.net`],
+        },
+      },
+    })
+  );
   // app.use(cookieParser());
   // app.use(
   //   session({
