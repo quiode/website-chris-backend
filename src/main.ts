@@ -10,7 +10,7 @@ import { join } from 'path';
 import { Constants } from './constants';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { cors: true });
   app.useStaticAssets(join(__dirname, '..', 'public'), { index: false, prefix: '/public/' });
   // app.use(
   //   helmet({
