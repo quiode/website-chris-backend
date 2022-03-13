@@ -44,7 +44,7 @@ lerna-debug.log*
 /assets/music/
 
 # Website
-/website/*
+website/*
 !website/.git*
 
 # Testing files
