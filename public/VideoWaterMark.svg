@@ -7,7 +7,7 @@
    viewBox="0 0 1920 1080"
    version="1.1"
    id="svg5"
-   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04, custom)"
    sodipodi:docname="VideoWaterMark.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
@@ -35,13 +35,13 @@
      inkscape:snap-center="true"
      inkscape:snap-text-baseline="true"
      inkscape:snap-page="true"
-     inkscape:zoom="0.5962963"
-     inkscape:cx="959.25466"
-     inkscape:cy="540.83851"
-     inkscape:window-width="1920"
-     inkscape:window-height="1048"
-     inkscape:window-x="0"
-     inkscape:window-y="32"
+     inkscape:zoom="0.29814815"
+     inkscape:cx="1143.7267"
+     inkscape:cy="768.07453"
+     inkscape:window-width="1900"
+     inkscape:window-height="986"
+     inkscape:window-x="10"
+     inkscape:window-y="48"
      inkscape:window-maximized="1"
      inkscape:current-layer="layer1" />
   <defs
@@ -52,13 +52,13 @@
      id="layer1">
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:40px;line-height:1.25;font-family:sans-serif;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none"
-       x="-2.6367188"
-       y="30.390625"
+       style="font-style:normal;font-weight:normal;font-size:21.3333px;line-height:1.25;font-family:sans-serif;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none"
+       x="-1.2373334"
+       y="16.213333"
        id="text2277"><tspan
          sodipodi:role="line"
          id="tspan2275"
-         x="-2.6367188"
-         y="30.390625">@Christoph Anton-Cornelius Bärtsch</tspan></text>
+         x="-1.2373334"
+         y="16.213333">@Christoph Bärtsch</tspan></text>
   </g>
 </svg>
