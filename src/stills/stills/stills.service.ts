@@ -22,7 +22,7 @@ export class StillsService implements OnModuleInit {
     @InjectRepository(Stills) private stillsRepository: Repository<Stills>,
     private mediaService: MediaService,
     private connection: Connection
-  ) {}
+  ) { }
 
   onModuleInit() {
     // clean temp folder on init
@@ -68,7 +68,7 @@ export class StillsService implements OnModuleInit {
    */
   async save(file: Express.Multer.File) {
     const promise: Promise<string> = this.mediaService.hashFile(file.path);
-    const watermark = '@Christoph Anton-Cornelius Bärtsch';
+    const watermark = '@Christoph Bärtsch';
 
     // create metadata
     const hash = await promise;
@@ -108,10 +108,10 @@ export class StillsService implements OnModuleInit {
     if (!(await this.compressImage(filePath, thumbnailPath))) {
       try {
         fs.rmSync(filePath, { recursive: true });
-      } catch (e) {}
+      } catch (e) { }
       try {
         fs.rmSync(thumbnailPath, { recursive: true });
-      } catch (e) {}
+      } catch (e) { }
       throw new InternalServerErrorException('could not create thumbnail');
     }
     // save metadata
