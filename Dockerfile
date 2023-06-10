@@ -2,6 +2,9 @@ FROM node:16-alpine
 
 WORKDIR /app
 
+# Dependencies
+RUN apk add --no-cache ffmpeg
+
 # npm
 COPY package.json package-lock.json ./
 RUN npm ci
