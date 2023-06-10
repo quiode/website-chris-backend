@@ -1,0 +1,16 @@
+version: '3'
+services:
+  website-chris-db:
+    image: "postgres:15-alpine"
+    container_name: website-chris-db
+    environment:
+      POSTGRES_PASSWORD: "1234"
+      POSTGRES_USER: "chris_api"
+      POSTGRES_DB: "website_chris"
+    ports:
+      - 5432:5432
+    volumes:
+      - "chris-db:/var/lib/postgresql/data"
+
+volumes:
+  chris-db:
