@@ -1,13 +1,12 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Multer } from 'multer';
-import { DeleteResult, Repository, Connection, MoreThan, MoreThanOrEqual } from 'typeorm';
+import { Repository, Connection, MoreThanOrEqual } from 'typeorm';
 import { Videos } from './videos.entity';
 import { MediaService } from '../media/media.service';
 import { Constants } from '../constants';
 import { randomUUID } from 'crypto';
 import * as fs from 'fs';
-import path from 'path';
 import { join } from 'path';
 
 export interface VideoBody {
