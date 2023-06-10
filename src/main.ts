@@ -33,7 +33,6 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:4200',
-      'http://localhost:41743',
       'https://christoph-baertsch.ch',
       'https://service.christoph-baertsch.ch',
     ],

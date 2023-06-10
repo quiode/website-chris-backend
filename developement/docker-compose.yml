@@ -10,7 +10,4 @@ services:
     ports:
       - 5432:5432
     volumes:
-      - "chris-db:/var/lib/postgresql/data"
-
-volumes:
-  chris-db:
+      - "./data/database:/var/lib/postgresql/data"
