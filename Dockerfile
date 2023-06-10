@@ -17,4 +17,4 @@ RUN npm run build
 
 # run
 EXPOSE 80
-CMD node dist/main.js
+CMD npm run start:prod
