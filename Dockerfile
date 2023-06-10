@@ -16,5 +16,5 @@ COPY . .
 RUN npm run build
 
 # run
-EXPOSE 80
+EXPOSE 3000
 CMD npm run start:prod
