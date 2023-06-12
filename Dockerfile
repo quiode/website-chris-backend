@@ -4,17 +4,18 @@ WORKDIR /app
 
 # Dependencies
 RUN apk add --no-cache ffmpeg
+RUN npm i -g pnpm
 
 # npm
-COPY package.json package-lock.json ./
-RUN npm ci
+COPY package.json pnpm-lock.yaml  ./
+RUN pnpm i
 
 # copy all
 COPY . .
 
 # build
-RUN npm run build
+RUN pnpm run build
 
 # run
 EXPOSE 3000
-CMD npm run start:prod
+CMD pnpm run start:prod
