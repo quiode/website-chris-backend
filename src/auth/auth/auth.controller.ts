@@ -21,7 +21,7 @@ import { Constants } from '../../constants';
 export class AuthController {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
-    private authService: AuthService
+    private authService: AuthService,
   ) {}
 
   @UseGuards(LocalAuthGuard)
@@ -31,11 +31,20 @@ export class AuthController {
   }
 
   @Get('/signup/:username/:password')
-  async signup(@Param('username') username: string, @Param('password') password: string) {
+  async signup(
+    @Param('username') username: string,
+    @Param('password') password: string,
+  ) {
     if (Constants.prod) {
       throw new BadRequestException('Signup is disabled in production');
     } else {
-      if (await this.userRepository.findOne({ username: username })) {
+      if (
+        await this.userRepository.findOne({
+          where: {
+            username: username,
+          },
+        })
+      ) {
         throw new ConflictException('User already exists');
       }
       await this.userRepository.save({

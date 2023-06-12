@@ -5,7 +5,9 @@ import { User } from '../user.entity';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectRepository(User) private userRepository: Repository<User>) {}
+  constructor(
+    @InjectRepository(User) private userRepository: Repository<User>,
+  ) {}
 
   findOne(username: string): Promise<User | undefined> {
     return this.userRepository.findOne({
@@ -20,7 +22,7 @@ export class UsersService {
   }
 
   async getLogin(id: number) {
-    const user = await this.userRepository.findOne(id);
+    const user = await this.userRepository.findOneBy({ id: id });
     return user.lastLogin;
   }
 }
