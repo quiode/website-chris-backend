@@ -3,14 +3,9 @@
 ## Setup
 
 - install ffmpeg (https://www.ffmpeg.org/download.html)
-- fill the `ormconfig.json` file with your database connection
-<!-- - replace the certificates in `./secrets` with your own
-- replace the secret key in `constants.ts` with your own -->
-- setup haproxy with ssl certificates and redirect
-- create admin account with signup api
-- set the variable `prod` to `true` in `constants.ts`
-- place static website under `./website`
-- run `typeorm schema:sync` once to sync the database with the schema
+- fill the `ormconfig.env` file with your database connection
+- create admin account with signup api (only possible of prod = false) <!-- TODO: replace with env var -->
+- run `typeorm schema:sync` once to sync the database with the schema (should be done automatically via TYPEORM_SYNCHRONIZE = true)
 
 ## API Documentation
 
