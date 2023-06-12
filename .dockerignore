@@ -1,8 +1,16 @@
 # Docker
 Dockerfile
 
-# git stuff
+# Developement
+/developement
+.github
+.git
+.gitignore
+.vscode
+/assets
+LICENSE.md
 
+# git stuff
 # compiled output
 /dist
 /node_modules
