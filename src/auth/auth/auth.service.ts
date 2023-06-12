@@ -1,4 +1,10 @@
-import { HttpCode, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpCode,
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { UsersService } from 'src/users/users/users.service';
 import * as bcrypt from 'bcrypt';
 import { User } from '../../users/user.entity';
@@ -18,10 +24,13 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     @InjectRepository(User) private userRepository: Repository<User>,
-    private jwtService: JwtService
+    private jwtService: JwtService,
   ) {}
 
-  async validateUser(username: string, password: string): Promise<UserInterface> {
+  async validateUser(
+    username: string,
+    password: string,
+  ): Promise<UserInterface> {
     const user = await this.usersService.findOne(username);
     if (!user) {
       throw new NotFoundException('User not found');

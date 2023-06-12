@@ -33,7 +33,7 @@ export class MusicController {
   @Get('/:id')
   async getAudio(
     @Param('id') id: string,
-    @Res({ passthrough: true }) res: Response
+    @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
     res.setHeader('Content-Type', 'audio/mpeg');
     res.setHeader('Content-Disposition', `attachment; filename=${id}.mp3`);
@@ -47,7 +47,7 @@ export class MusicController {
   @Get('/:id/image')
   async getImage(
     @Param('id') id: string,
-    @Res({ passthrough: true }) res: Response
+    @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
     res.setHeader('Content-Type', 'audio/mpeg');
     res.setHeader('Content-Disposition', `attachment; filename=${id}.mp3`);
@@ -88,12 +88,13 @@ export class MusicController {
               break;
           }
         },
-      }
-    )
+      },
+    ),
   )
   async create(
-    @UploadedFiles() files: { song?: Express.Multer.File[]; cover?: Express.Multer.File[] },
-    @Body() url: { url: string }
+    @UploadedFiles()
+    files: { song?: Express.Multer.File[]; cover?: Express.Multer.File[] },
+    @Body() url: { url: string },
   ): Promise<Music> {
     if (files.song == undefined || files.cover == undefined) {
       throw new BadRequestException('Invalid files');
@@ -119,7 +120,9 @@ export class MusicController {
 
   @Patch()
   @UseGuards(JwtAuthGuard)
-  async replaceVideos(@Body() music: { id: string; url: string; position: number }[]) {
+  async replaceVideos(
+    @Body() music: { id: string; url: string; position: number }[],
+  ) {
     if (!(await this.musicService.replaceMusic(music))) {
       throw new InternalServerErrorException('Error while replacing music');
     }

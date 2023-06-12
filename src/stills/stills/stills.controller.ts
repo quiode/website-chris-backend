@@ -47,7 +47,10 @@ export class StillsController {
   }
 
   @Get('amount/:from/:to')
-  async getRange(@Param('from', ParseIntPipe) from: number, @Param('to', ParseIntPipe) to: number) {
+  async getRange(
+    @Param('from', ParseIntPipe) from: number,
+    @Param('to', ParseIntPipe) to: number,
+  ) {
     return this.stillsService.getRange(from, to);
   }
 
@@ -55,7 +58,7 @@ export class StillsController {
   @Get('/:uuid')
   async getOriginal(
     @Param('uuid', ParseUUIDPipe) uuid: string,
-    @Response({ passthrough: true }) res
+    @Response({ passthrough: true }) res,
   ) {
     const file = this.stillsService.getOriginal(uuid);
     const metadata = await this.stillsService.getMetadata(uuid);
@@ -73,7 +76,7 @@ export class StillsController {
   @Get('/:uuid/thumbnail')
   async getThumbnail(
     @Param('uuid', ParseUUIDPipe) uuid: string,
-    @Response({ passthrough: true }) res
+    @Response({ passthrough: true }) res,
   ) {
     const file = this.stillsService.getThumbnail(uuid);
     const metadata = await this.stillsService.getMetadata(uuid);
@@ -99,9 +102,12 @@ export class StillsController {
           cb(null, true);
         }
       },
-    })
+    }),
   )
-  async upload(@UploadedFile() file: Express.Multer.File, @Req() request: Request) {
+  async upload(
+    @UploadedFile() file: Express.Multer.File,
+    @Req() request: Request,
+  ) {
     if (file.mimetype !== 'image/jpeg') {
       throw new UnsupportedMediaTypeException('Only JPEG files are supported');
     }

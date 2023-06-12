@@ -1,4 +1,8 @@
-import { Injectable, InternalServerErrorException, OnModuleInit } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  OnModuleInit,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createReadStream, ReadStream } from 'fs';
 import { join } from 'path/posix';
@@ -21,13 +25,17 @@ export class StillsService implements OnModuleInit {
   constructor(
     @InjectRepository(Stills) private stillsRepository: Repository<Stills>,
     private mediaService: MediaService,
-    private connection: Connection
-  ) { }
+    private connection: Connection,
+  ) {}
 
   onModuleInit() {
     // clean temp folder on init
-    fs.rmSync(join(process.cwd(), Constants.temp_upload_path), { recursive: true });
-    fs.mkdirSync(join(process.cwd(), Constants.temp_upload_path), { recursive: true });
+    fs.rmSync(join(process.cwd(), Constants.temp_upload_path), {
+      recursive: true,
+    });
+    fs.mkdirSync(join(process.cwd(), Constants.temp_upload_path), {
+      recursive: true,
+    });
   }
 
   private fontBig: Font;
@@ -39,13 +47,21 @@ export class StillsService implements OnModuleInit {
 
   getOriginal(uuid: string): ReadStream {
     return createReadStream(
-      join(process.cwd(), Constants.stills_path, uuid + Constants.image_extension)
+      join(
+        process.cwd(),
+        Constants.stills_path,
+        uuid + Constants.image_extension,
+      ),
     );
   }
 
   getThumbnail(uuid: string): ReadStream {
     return createReadStream(
-      join(process.cwd(), Constants.stills_thumbnails_path, uuid + Constants.image_extension)
+      join(
+        process.cwd(),
+        Constants.stills_thumbnails_path,
+        uuid + Constants.image_extension,
+      ),
     );
   }
 
@@ -74,7 +90,11 @@ export class StillsService implements OnModuleInit {
     const hash = await promise;
     const uuid = crypto.randomUUID();
     // save file to final destination
-    const filePath = join(process.cwd(), Constants.stills_path, uuid + Constants.image_extension);
+    const filePath = join(
+      process.cwd(),
+      Constants.stills_path,
+      uuid + Constants.image_extension,
+    );
     fs.mkdirSync(Constants.stills_path, { recursive: true });
     fs.copyFileSync(join(process.cwd(), file.path), filePath);
 
@@ -103,15 +123,15 @@ export class StillsService implements OnModuleInit {
     const thumbnailPath = join(
       process.cwd(),
       Constants.stills_thumbnails_path,
-      uuid + Constants.image_extension
+      uuid + Constants.image_extension,
     );
     if (!(await this.compressImage(filePath, thumbnailPath))) {
       try {
         fs.rmSync(filePath, { recursive: true });
-      } catch (e) { }
+      } catch (e) {}
       try {
         fs.rmSync(thumbnailPath, { recursive: true });
-      } catch (e) { }
+      } catch (e) {}
       throw new InternalServerErrorException('could not create thumbnail');
     }
     // save metadata
@@ -166,7 +186,10 @@ export class StillsService implements OnModuleInit {
   }
 
   update(content: updateBody) {
-    return this.stillsRepository.update({ id: content.uuid }, { position: content.position });
+    return this.stillsRepository.update(
+      { id: content.uuid },
+      { position: content.position },
+    );
   }
 
   /**
@@ -194,24 +217,38 @@ export class StillsService implements OnModuleInit {
         });
         stills.then((stills) => {
           stills.forEach(async (still) => {
-            this.stillsRepository.update({ id: still.id }, { position: still.position - 1 });
+            this.stillsRepository.update(
+              { id: still.id },
+              { position: still.position - 1 },
+            );
           });
         });
       });
     });
     // delete still in file system
-    fs.rm(join(process.cwd(), Constants.stills_path, uuid + Constants.image_extension), (err) => {
-      if (err) {
-        throw new InternalServerErrorException(err);
-      }
-    });
     fs.rm(
-      join(process.cwd(), Constants.stills_thumbnails_path, uuid + Constants.image_extension),
+      join(
+        process.cwd(),
+        Constants.stills_path,
+        uuid + Constants.image_extension,
+      ),
       (err) => {
         if (err) {
           throw new InternalServerErrorException(err);
         }
-      }
+      },
+    );
+    fs.rm(
+      join(
+        process.cwd(),
+        Constants.stills_thumbnails_path,
+        uuid + Constants.image_extension,
+      ),
+      (err) => {
+        if (err) {
+          throw new InternalServerErrorException(err);
+        }
+      },
     );
   }
 

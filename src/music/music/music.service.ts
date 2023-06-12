@@ -17,7 +17,7 @@ export class MusicService {
   constructor(
     private mediaService: MediaService,
     @InjectRepository(Music) private musicRepository: Repository<Music>,
-    private connection: Connection
+    private connection: Connection,
   ) {}
 
   checkIfUUIDExists(uuid: string) {
@@ -28,7 +28,11 @@ export class MusicService {
     return this.mediaService.getAll(this.musicRepository);
   }
 
-  async create(musicPost: { url: string; image: Express.Multer.File; song: Express.Multer.File }) {
+  async create(musicPost: {
+    url: string;
+    image: Express.Multer.File;
+    song: Express.Multer.File;
+  }) {
     const music = new Music();
     music.url = musicPost.url;
     music.hash = await this.mediaService.hashFile(musicPost.song.path);
@@ -39,11 +43,14 @@ export class MusicService {
     fs.mkdirSync(Constants.music_images_path, { recursive: true });
     fs.copyFileSync(
       musicPost.song.path,
-      Constants.music_path + '/' + music.id + Constants.music_extension
+      Constants.music_path + '/' + music.id + Constants.music_extension,
     );
     fs.copyFileSync(
       musicPost.image.path,
-      Constants.music_images_path + '/' + music.pictureId + Constants.image_extension
+      Constants.music_images_path +
+        '/' +
+        music.pictureId +
+        Constants.image_extension,
     );
     fs.rmSync(musicPost.song.path, { recursive: true, force: true });
     fs.rmSync(musicPost.image.path, { recursive: true, force: true });
@@ -65,7 +72,9 @@ export class MusicService {
 
   async checkIfSongExists(songPath: string) {
     const hash = await this.mediaService.hashFile(songPath);
-    const result = await this.musicRepository.findOne({ where: { hash: hash } });
+    const result = await this.musicRepository.findOne({
+      where: { hash: hash },
+    });
     return result != undefined;
   }
 
@@ -74,7 +83,9 @@ export class MusicService {
     if (item == undefined) {
       throw new NotFoundException('Music not found');
     }
-    return fs.createReadStream(Constants.music_path + '/' + item.id + Constants.music_extension);
+    return fs.createReadStream(
+      Constants.music_path + '/' + item.id + Constants.music_extension,
+    );
   }
 
   async getImage(id: string) {
@@ -83,7 +94,10 @@ export class MusicService {
       throw new NotFoundException('Image not found');
     }
     return fs.createReadStream(
-      Constants.music_images_path + '/' + item.pictureId + Constants.image_extension
+      Constants.music_images_path +
+        '/' +
+        item.pictureId +
+        Constants.image_extension,
     );
   }
 
@@ -92,14 +106,23 @@ export class MusicService {
     if (item == undefined) {
       throw new NotFoundException('Music not found');
     }
-    fs.rmSync(Constants.music_path + '/' + item.id + Constants.music_extension, {
-      recursive: true,
-      force: true,
-    });
-    fs.rmSync(Constants.music_images_path + '/' + item.pictureId + Constants.image_extension, {
-      recursive: true,
-      force: true,
-    });
+    fs.rmSync(
+      Constants.music_path + '/' + item.id + Constants.music_extension,
+      {
+        recursive: true,
+        force: true,
+      },
+    );
+    fs.rmSync(
+      Constants.music_images_path +
+        '/' +
+        item.pictureId +
+        Constants.image_extension,
+      {
+        recursive: true,
+        force: true,
+      },
+    );
     await this.musicRepository.delete({ id: id });
   }
 
@@ -112,14 +135,16 @@ export class MusicService {
     await runner.startTransaction();
     try {
       for (const video of body) {
-        const videoData = await this.musicRepository.findOne({ where: { id: video.id } });
+        const videoData = await this.musicRepository.findOne({
+          where: { id: video.id },
+        });
         await runner.manager.update(
           Music,
           { id: video.id },
           {
             url: video.url,
             position: (videoData.position + 1) * -1,
-          }
+          },
         );
       }
       for (const video of body) {
@@ -128,7 +153,7 @@ export class MusicService {
           { id: video.id },
           {
             position: video.position,
-          }
+          },
         );
       }
       await runner.commitTransaction();

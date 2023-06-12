@@ -6,7 +6,11 @@ import { MusicService } from './music/music.service';
 export class ExistsGuard implements CanActivate {
   constructor(private musicService: MusicService) {}
 
-  canActivate(context: ExecutionContext): boolean | Promise<boolean> | Observable<boolean> {
-    return this.musicService.checkIfUUIDExists(context.switchToHttp().getRequest().params.uuid);
+  canActivate(
+    context: ExecutionContext,
+  ): boolean | Promise<boolean> | Observable<boolean> {
+    return this.musicService.checkIfUUIDExists(
+      context.switchToHttp().getRequest().params.uuid,
+    );
   }
 }

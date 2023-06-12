@@ -29,7 +29,7 @@ export class VideosService {
   constructor(
     @InjectRepository(Videos) private videosRepository: Repository<Videos>,
     private mediaService: MediaService,
-    private connection: Connection
+    private connection: Connection,
   ) {}
 
   getAll(): Promise<Videos[]> {
@@ -39,11 +39,17 @@ export class VideosService {
   async createVideo(
     videoBody: VideoBody,
     video: Express.Multer.File,
-    images: Express.Multer.File[]
+    images: Express.Multer.File[],
   ): Promise<Videos> {
     const videoUUID = randomUUID();
     const imageUUIDS: string[] = [];
-    if (!(await this.mediaService.waterMarkVideo(video.path, Constants.videos_path, videoUUID))) {
+    if (
+      !(await this.mediaService.waterMarkVideo(
+        video.path,
+        Constants.videos_path,
+        videoUUID,
+      ))
+    ) {
       this.videoErrorCleanup(videoUUID, imageUUIDS);
       throw new InternalServerErrorException('Could not watermark video');
     }
@@ -55,7 +61,7 @@ export class VideosService {
         !(await this.mediaService.waterMarkImage(
           image.path,
           Constants.videos_images_path,
-          imageUUID
+          imageUUID,
         ))
       ) {
         this.videoErrorCleanup(videoUUID, imageUUIDS);
@@ -65,9 +71,11 @@ export class VideosService {
     const videoData = new Videos();
     videoData.id = videoUUID;
     videoData.hash = await this.mediaService.hashFile(
-      join(Constants.videos_path, videoUUID + Constants.video_extension)
+      join(Constants.videos_path, videoUUID + Constants.video_extension),
     );
-    const hasOne = await this.videosRepository.findOne({ where: { hash: videoData.hash } });
+    const hasOne = await this.videosRepository.findOne({
+      where: { hash: videoData.hash },
+    });
     if (hasOne) {
       this.videoErrorCleanup(videoUUID, imageUUIDS);
       throw new InternalServerErrorException('Video already exists');
@@ -97,16 +105,25 @@ export class VideosService {
   }
 
   private videoErrorCleanup(videoUUID: string, imageUUIDS: string[]) {
-    fs.rmSync(join(Constants.videos_path, videoUUID + Constants.video_extension), {
-      force: true,
-      recursive: true,
-    });
-
-    for (const imageUUID of imageUUIDS) {
-      fs.rmSync(join(Constants.videos_images_path, imageUUID + Constants.image_extension), {
+    fs.rmSync(
+      join(Constants.videos_path, videoUUID + Constants.video_extension),
+      {
         force: true,
         recursive: true,
-      });
+      },
+    );
+
+    for (const imageUUID of imageUUIDS) {
+      fs.rmSync(
+        join(
+          Constants.videos_images_path,
+          imageUUID + Constants.image_extension,
+        ),
+        {
+          force: true,
+          recursive: true,
+        },
+      );
     }
   }
 
@@ -116,20 +133,29 @@ export class VideosService {
       .then((video) => {
         return [video.picture1Id, video.picture2Id, video.picture3Id];
       });
-    fs.rmSync(join(Constants.videos_path, videoId + Constants.video_extension), {
-      force: true,
-    });
-    for (const image_url of images_urls) {
-      fs.rmSync(join(Constants.videos_images_path, image_url + Constants.image_extension), {
+    fs.rmSync(
+      join(Constants.videos_path, videoId + Constants.video_extension),
+      {
         force: true,
-      });
+      },
+    );
+    for (const image_url of images_urls) {
+      fs.rmSync(
+        join(
+          Constants.videos_images_path,
+          image_url + Constants.image_extension,
+        ),
+        {
+          force: true,
+        },
+      );
     }
     const biggerVideos = await this.videosRepository.find({
       where: {
         position: MoreThanOrEqual(
           await (
             await this.videosRepository.findOne({ where: { id: videoId } })
-          ).position
+          ).position,
         ),
       },
       order: { position: 'ASC' },
@@ -138,20 +164,30 @@ export class VideosService {
     await this.videosRepository.delete({ id: videoId });
 
     for (const video of biggerVideos) {
-      await this.videosRepository.update(video.id, { position: video.position - 1 });
+      await this.videosRepository.update(video.id, {
+        position: video.position - 1,
+      });
     }
 
     return this.getAll();
   }
 
   async exists(videoId: string): Promise<boolean> {
-    return this.videosRepository.findOne({ where: { id: videoId } }).then((video) => {
-      return video !== undefined;
-    });
+    return this.videosRepository
+      .findOne({ where: { id: videoId } })
+      .then((video) => {
+        return video !== undefined;
+      });
   }
 
   async replaceVideos(
-    body: { id: string; position: number; line1: string; line2: string; url: string }[]
+    body: {
+      id: string;
+      position: number;
+      line1: string;
+      line2: string;
+      url: string;
+    }[],
   ) {
     if (body.length < (await this.videosRepository.count())) {
       return false;
@@ -161,7 +197,9 @@ export class VideosService {
     await runner.startTransaction();
     try {
       for (const video of body) {
-        const videoData = await this.videosRepository.findOne({ where: { id: video.id } });
+        const videoData = await this.videosRepository.findOne({
+          where: { id: video.id },
+        });
         await runner.manager.update(
           Videos,
           { id: video.id },
@@ -170,7 +208,7 @@ export class VideosService {
             line2: video.line2,
             url: video.url,
             position: (videoData.position + 1) * -1,
-          }
+          },
         );
       }
       for (const video of body) {
@@ -179,7 +217,7 @@ export class VideosService {
           { id: video.id },
           {
             position: video.position,
-          }
+          },
         );
       }
       await runner.commitTransaction();

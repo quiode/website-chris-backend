@@ -38,10 +38,12 @@ export class VideosController {
   getVideo(
     @Param('id', ParseUUIDPipe) id: string,
     @Res() res: express.Response,
-    @Req() req: express.Request
+    @Req() req: express.Request,
   ) {
     try {
-      fs.accessSync(join(Constants.videos_path, id + Constants.video_extension));
+      fs.accessSync(
+        join(Constants.videos_path, id + Constants.video_extension),
+      );
     } catch (e) {
       throw new BadRequestException('Video not found');
     }
@@ -78,19 +80,21 @@ export class VideosController {
   getPhoto(
     @Param('id', ParseUUIDPipe) id: string,
     @Param('photo', ParseUUIDPipe) photo: string,
-    @Response({ passthrough: true }) res: express.Response
+    @Response({ passthrough: true }) res: express.Response,
   ): StreamableFile {
     res.set({
       'Content-Type': `image/jpeg`,
       'Content-Disposition': `attachment; filename="${photo}${Constants.image_extension}"`,
     });
     try {
-      fs.accessSync(join(Constants.videos_images_path, photo + Constants.image_extension));
+      fs.accessSync(
+        join(Constants.videos_images_path, photo + Constants.image_extension),
+      );
     } catch (e) {
       throw new BadRequestException('Image not found');
     }
     const file = fs.createReadStream(
-      join(Constants.videos_images_path, photo + Constants.image_extension)
+      join(Constants.videos_images_path, photo + Constants.image_extension),
     );
     return new StreamableFile(file);
   }
@@ -138,8 +142,8 @@ export class VideosController {
               break;
           }
         },
-      }
-    )
+      },
+    ),
   )
   async createVideo(
     @UploadedFiles()
@@ -149,7 +153,7 @@ export class VideosController {
       picture2?: Express.Multer.File[];
       picture3?: Express.Multer.File[];
     },
-    @Body() videoBody: { metadata: string }
+    @Body() videoBody: { metadata: string },
   ) {
     if (
       !files.video ||
@@ -181,7 +185,14 @@ export class VideosController {
   @Patch()
   @UseGuards(JwtAuthGuard)
   async replaceVideos(
-    @Body() body: { id: string; position: number; line1: string; line2: string; url: string }[]
+    @Body()
+    body: {
+      id: string;
+      position: number;
+      line1: string;
+      line2: string;
+      url: string;
+    }[],
   ) {
     if (await !this.videosService.replaceVideos(body)) {
       throw new BadRequestException('Invalid videos');

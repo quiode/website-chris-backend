@@ -1,5 +1,16 @@
-import { Repository, LessThan, Between, MoreThanOrEqual, Connection, EntityTarget } from 'typeorm';
-import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Repository,
+  LessThan,
+  Between,
+  MoreThanOrEqual,
+  Connection,
+  EntityTarget,
+} from 'typeorm';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import * as fs from 'fs';
 import * as crypto from 'crypto';
 import { join } from 'path';
@@ -14,7 +25,10 @@ import Ffmpeg = require('fluent-ffmpeg');
 export class MediaService {
   constructor(private connection: Connection) {}
 
-  async checkIfUUIDExists(uuid: string, repository: Repository<Stills | Videos | Music>) {
+  async checkIfUUIDExists(
+    uuid: string,
+    repository: Repository<Stills | Videos | Music>,
+  ) {
     const result = await repository.findOne({ where: { id: uuid } });
     if (!result) {
       throw new NotFoundException('UUID not found');
@@ -27,13 +41,16 @@ export class MediaService {
    * @param uuid the uuid of the image
    * @returns the stored data of the given uuid
    */
-  getMetadata(uuid: string, repository: Repository<Stills | Videos | Music>): Promise<any> {
+  getMetadata(
+    uuid: string,
+    repository: Repository<Stills | Videos | Music>,
+  ): Promise<any> {
     return repository.findOne({ where: { id: uuid } });
   }
 
   async checkIfFileExists(
     file: Express.Multer.File,
-    repository: Repository<Stills | Videos | Music>
+    repository: Repository<Stills | Videos | Music>,
   ): Promise<boolean> {
     const promise: Promise<string> = this.hashFile(file.path);
 
@@ -86,7 +103,11 @@ export class MediaService {
     return repository.count();
   }
 
-  getRange(start: number, end: number, repository: Repository<Stills | Videos | Music>) {
+  getRange(
+    start: number,
+    end: number,
+    repository: Repository<Stills | Videos | Music>,
+  ) {
     return repository.find({
       where: { position: Between(start, end) },
     });
@@ -96,13 +117,19 @@ export class MediaService {
    * moves all files with a position greater than the given position to the right so that the given position can be inserted
    * @param position position where the file should be inserted
    */
-  async insertPosition(position: number, repository: Repository<Stills | Videos | Music>) {
+  async insertPosition(
+    position: number,
+    repository: Repository<Stills | Videos | Music>,
+  ) {
     const stills = repository.find({
       where: { position: MoreThanOrEqual(position) },
     });
 
     (await stills).forEach(async (still) => {
-      await repository.update({ id: still.id }, { position: still.position + 1 });
+      await repository.update(
+        { id: still.id },
+        { position: still.position + 1 },
+      );
     });
   }
 
@@ -111,7 +138,11 @@ export class MediaService {
    * @param uuid1
    * @param uuid2
    */
-  async reorder(uuid1: string, uuid2: string, repository: Repository<Stills | Videos | Music>) {
+  async reorder(
+    uuid1: string,
+    uuid2: string,
+    repository: Repository<Stills | Videos | Music>,
+  ) {
     const still1 = await repository.findOne({
       where: { id: uuid1 },
     });
@@ -127,8 +158,13 @@ export class MediaService {
     };
   }
 
-  async insert(uuid: string, position: number, repository: Repository<Stills | Videos | Music>) {
-    const previousPosition = (await repository.findOne({ where: { id: uuid } })).position;
+  async insert(
+    uuid: string,
+    position: number,
+    repository: Repository<Stills | Videos | Music>,
+  ) {
+    const previousPosition = (await repository.findOne({ where: { id: uuid } }))
+      .position;
     if (previousPosition == position) {
       return;
     }
@@ -141,7 +177,7 @@ export class MediaService {
       for (let i = 0; i < inBetweenValues.length; i++) {
         await repository.update(
           { id: inBetweenValues[i].id },
-          { position: inBetweenValues[i].position - 1 }
+          { position: inBetweenValues[i].position - 1 },
         );
       }
     } else {
@@ -152,7 +188,7 @@ export class MediaService {
       for (let i = 0; i < inBetweenValues.length; i++) {
         await repository.update(
           { id: inBetweenValues[i].id },
-          { position: inBetweenValues[i].position + 1 }
+          { position: inBetweenValues[i].position + 1 },
         );
       }
     }
@@ -161,7 +197,7 @@ export class MediaService {
 
   async replace(
     body: { id: string; position: number }[],
-    entity: EntityTarget<Stills | Videos | Music>
+    entity: EntityTarget<Stills | Videos | Music>,
   ): Promise<boolean> {
     const queryRunner = this.connection.createQueryRunner();
 
@@ -189,7 +225,7 @@ export class MediaService {
           await queryRunner.manager.update(
             entity,
             { id: element.id },
-            { position: (position + 1) * -1 }
+            { position: (position + 1) * -1 },
           );
         }
         for (let index = 0; index < body.length; index++) {
@@ -197,7 +233,7 @@ export class MediaService {
           await queryRunner.manager.update(
             entity,
             { id: element.id },
-            { position: element.position }
+            { position: element.position },
           );
         }
       }
@@ -221,7 +257,7 @@ export class MediaService {
       const temp_output = join(
         process.cwd(),
         Constants.temp_upload_path,
-        newFileName + Constants.video_extension
+        newFileName + Constants.video_extension,
       );
       fs.mkdirSync(Constants.videos_path, { recursive: true });
       const command = Ffmpeg(path)
@@ -247,9 +283,12 @@ export class MediaService {
         const input = join(
           process.cwd(),
           Constants.temp_upload_path,
-          newFileName + Constants.video_extension
+          newFileName + Constants.video_extension,
         );
-        const outputPath = join(output, newFileName + Constants.video_extension);
+        const outputPath = join(
+          output,
+          newFileName + Constants.video_extension,
+        );
         const command = Ffmpeg(input);
         command
           .on('progress', (progress) => {
