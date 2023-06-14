@@ -24,10 +24,15 @@ import { Videos } from './videos.entity';
 import { join } from 'path';
 import * as fs from 'fs';
 import * as express from 'express';
+import { UUID } from 'crypto';
+import { ProgressService } from 'src/shared/progress/progress.service';
 
 @Controller('videos')
 export class VideosController {
-  constructor(private videosService: VideosService) {}
+  constructor(
+    private videosService: VideosService,
+    private progressService: ProgressService,
+  ) {}
 
   @Get()
   async getAllMetaData(): Promise<Videos[]> {
@@ -145,7 +150,10 @@ export class VideosController {
       },
     ),
   )
-  async createVideo(
+  /**
+   * creates a video and returns the uuid of the progress event
+   */
+  createVideo(
     @UploadedFiles()
     files: {
       video?: Express.Multer.File[];
@@ -154,7 +162,7 @@ export class VideosController {
       picture3?: Express.Multer.File[];
     },
     @Body() videoBody: { metadata: string },
-  ) {
+  ): { uuid: UUID } {
     if (
       !files.video ||
       !files.picture1 ||
@@ -171,15 +179,17 @@ export class VideosController {
     const picture1 = files.picture1[0];
     const picture2 = files.picture2[0];
     const picture3 = files.picture3[0];
-    return this.videosService
-      .createVideo(JSON.parse(videoBody.metadata) as VideoBody, video, [
-        picture1,
-        picture2,
-        picture3,
-      ])
-      .then((video) => {
-        return video;
-      });
+
+    const progressUUID = this.progressService.registerNewProgress();
+
+    this.videosService.createVideo(
+      JSON.parse(videoBody.metadata) as VideoBody,
+      video,
+      [picture1, picture2, picture3],
+      progressUUID,
+    );
+
+    return { uuid: progressUUID };
   }
 
   @Patch()
