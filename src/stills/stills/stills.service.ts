@@ -11,7 +11,7 @@ import { Stills } from '../stills.entity';
 import { Constants } from '../../constants';
 import * as fs from 'fs';
 import * as crypto from 'crypto';
-import { MediaService } from 'src/media/media.service';
+import { MediaService } from 'src/shared/media/media.service';
 import { Font } from '@jimp/plugin-print';
 import Jimp = require('jimp');
 

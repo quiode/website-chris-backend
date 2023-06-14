@@ -10,8 +10,8 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
 import { Connection, getConnectionOptions } from 'typeorm';
-import { MediaService } from './media/media.service';
-import { MediaModule } from './media/media.module';
+import { MediaService } from './shared/media/media.service';
+import { SharedModule } from './shared/shared.module';
 
 @Module({
   imports: [
@@ -30,7 +30,7 @@ import { MediaModule } from './media/media.module';
       limit: 100,
     }),
     AuthModule,
-    MediaModule,
+    SharedModule,
   ],
   controllers: [AppController],
   providers: [
