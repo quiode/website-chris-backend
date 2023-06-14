@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { MediaService } from 'src/media/media.service';
+import { MediaService } from 'src/shared/media/media.service';
 import { Repository, Connection } from 'typeorm';
 import { Music } from '../music.entity';
 import { randomUUID } from 'crypto';

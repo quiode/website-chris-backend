@@ -18,12 +18,21 @@ import Jimp = require('jimp');
 import { Stills } from 'src/stills/stills.entity';
 import { Videos } from 'src/videos/videos.entity';
 import { Music } from 'src/music/music.entity';
-import { Constants } from '../constants';
+import { Constants } from '../../constants';
 import Ffmpeg = require('fluent-ffmpeg');
+import { Subject } from 'rxjs';
+import { VideoUploadEvent } from 'src/videos/videos.service';
+import {
+  ProgressService,
+  ProgressType,
+} from 'src/shared/progress/progress.service';
 
 @Injectable()
 export class MediaService {
-  constructor(private connection: Connection) {}
+  constructor(
+    private connection: Connection,
+    private progressService: ProgressService,
+  ) {}
 
   async checkIfUUIDExists(
     uuid: string,
@@ -252,7 +261,12 @@ export class MediaService {
    * @param path path to the file
    * @returns watermarks the file, resizes the file, safes it to a constant location and returns true on success
    */
-  async waterMarkVideo(path: string, output: string, newFileName: string) {
+  async waterMarkVideo(
+    path: string,
+    output: string,
+    newFileName: string,
+    progressUUID?: crypto.UUID,
+  ) {
     const resizing = await new Promise<boolean>((resolve, reject) => {
       const temp_output = join(
         process.cwd(),
@@ -260,9 +274,15 @@ export class MediaService {
         newFileName + Constants.video_extension,
       );
       fs.mkdirSync(Constants.videos_path, { recursive: true });
-      const command = Ffmpeg(path)
+      Ffmpeg(path)
         .on('progress', (progress) => {
-          // console.log(progress);
+          if (progressUUID)
+            this.progressService.nextProgress(progressUUID, {
+              data: {
+                progress: progress.percent,
+                type: ProgressType.VIDEO_CONVERT,
+              },
+            });
         })
         .size('1920x?')
         .toFormat(Constants.video_extension.replace('.', ''))
@@ -292,7 +312,13 @@ export class MediaService {
         const command = Ffmpeg(input);
         command
           .on('progress', (progress) => {
-            // console.log(progress);
+            if (progressUUID)
+              this.progressService.nextProgress(progressUUID, {
+                data: {
+                  progress: progress.percent,
+                  type: ProgressType.WATERMARKING_VIDEO,
+                },
+              });
           })
           .input(join(process.cwd(), 'public/VideoWaterMark.png'))
           .complexFilter({
@@ -300,7 +326,7 @@ export class MediaService {
             options: { x: 10, y: 10 },
           })
           .on('error', (error) => {
-            // console.error(error);
+            console.error(error);
             fs.rmSync(input);
             fs.rmSync(outputPath);
             reject(false);
@@ -321,8 +347,19 @@ export class MediaService {
     }
   }
 
-  async waterMarkImage(path: string, output: string, newFileName: string) {
-    const watermark = '@Christoph Anton-Cornelius Bärtsch';
+  async waterMarkImage(
+    path: string,
+    output: string,
+    newFileName: string,
+    progressSubject?: Subject<VideoUploadEvent>,
+  ) {
+    const watermark = '@Christoph  Bärtsch';
+    progressSubject?.next({
+      data: {
+        progress: 20,
+        type: 'Watermarking Image',
+      },
+    });
     fs.mkdirSync(output, { recursive: true });
     const result = await this.compressImage(path, join(output, newFileName));
     // add watermark
@@ -335,6 +372,12 @@ export class MediaService {
 
     fs.rmSync(join(output, newFileName), { recursive: true, force: true });
     fs.rmSync(path, { recursive: true, force: true });
+    progressSubject?.next({
+      data: {
+        progress: 100,
+        type: 'Watermarking Image',
+      },
+    });
     return result;
   }
 }

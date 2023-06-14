@@ -1,13 +1,16 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Multer } from 'multer';
 import { Repository, Connection, MoreThanOrEqual } from 'typeorm';
 import { Videos } from './videos.entity';
-import { MediaService } from '../media/media.service';
+import { MediaService } from '../shared/media/media.service';
 import { Constants } from '../constants';
-import { randomUUID } from 'crypto';
+import { UUID, randomUUID } from 'crypto';
 import * as fs from 'fs';
 import { join } from 'path';
+import {
+  ProgressService,
+  ProgressType,
+} from 'src/shared/progress/progress.service';
 
 export interface VideoBody {
   url: string;
@@ -24,12 +27,25 @@ export interface VideoData extends VideoBody {
   picture3Id: string;
 }
 
+export interface MessageEvent<T = object> {
+  data: string | T;
+  id?: string;
+  type?: string;
+  retry?: number;
+}
+
+export type VideoUploadEvent = MessageEvent<{
+  progress: number;
+  type: string;
+}>;
+
 @Injectable()
 export class VideosService {
   constructor(
     @InjectRepository(Videos) private videosRepository: Repository<Videos>,
     private mediaService: MediaService,
     private connection: Connection,
+    private progressService: ProgressService,
   ) {}
 
   getAll(): Promise<Videos[]> {
@@ -40,6 +56,7 @@ export class VideosService {
     videoBody: VideoBody,
     video: Express.Multer.File,
     images: Express.Multer.File[],
+    progress?: UUID,
   ): Promise<Videos> {
     const videoUUID = randomUUID();
     const imageUUIDS: string[] = [];
@@ -48,6 +65,7 @@ export class VideosService {
         video.path,
         Constants.videos_path,
         videoUUID,
+        progress,
       ))
     ) {
       this.videoErrorCleanup(videoUUID, imageUUIDS);
@@ -70,9 +88,23 @@ export class VideosService {
     }
     const videoData = new Videos();
     videoData.id = videoUUID;
+    if (progress)
+      this.progressService.nextProgress(progress, {
+        data: {
+          progress: 10,
+          type: ProgressType.HASH_VIDEO,
+        },
+      });
     videoData.hash = await this.mediaService.hashFile(
       join(Constants.videos_path, videoUUID + Constants.video_extension),
     );
+    if (progress)
+      this.progressService.nextProgress(progress, {
+        data: {
+          progress: 100,
+          type: ProgressType.HASH_VIDEO,
+        },
+      });
     const hasOne = await this.videosRepository.findOne({
       where: { hash: videoData.hash },
     });
@@ -101,6 +133,7 @@ export class VideosService {
         counter++;
       }
     }
+    this.progressService.completeProgress(progress);
     return this.videosRepository.findOne({ where: { id: videoUUID } });
   }
 
